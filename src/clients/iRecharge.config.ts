@@ -69,9 +69,58 @@ export class IRechargeConfigService {
         return this.makeApiRequest('vend_airtime.php', params);
     }
 
+    static async getTvBouquet(params: {
+        tv_network: string;
+    }): Promise<any> {
+        return this.makeApiRequest('get_tv_bouquet.php', params);
+    }
+
+    static async getSmartcardInfo(params: {
+        smartcard_number: string;
+        service_code: string;
+        reference_id: string;
+        tv_network: string;
+        tv_amount?: string; // Optional, only for StarTimes
+    }): Promise<any> {
+        return this.makeApiRequest('get_smartcard_info.php', params);
+    }
+
+    static async vendTv(params: {
+        smartcard_number: string;
+        access_token: string;
+        tv_network: string;
+        reference_id: string;
+        service_code: string;
+        phone: string;
+        email: string;
+    }): Promise<any> {
+        return this.makeApiRequest('vend_tv.php', params);
+    }
+
     // Validate the response hash
-    static validateResponseHash(customerName: string, Token: string, responseHash: string): boolean {
-        const combinedResponse = `${customerName}|${Token}`;
+    static validateResponseHash(customerName: string, accessToken: string, responseHash: string): boolean {
+        const combinedResponse = `${customerName}|${accessToken}`;
+        const computedHash = crypto.createHmac('sha1', IRECHARGE_CONFIG.PUBLIC_KEY).update(combinedResponse).digest('hex');
+        return computedHash === responseHash;
+    }
+
+    // Validate the airtime response hash
+    static validateAirtimeResponseHash(accessToken: string, meterToken: string, responseHash: string): boolean {
+        const combinedResponse = `${accessToken}|${meterToken}`;
+        const computedHash = crypto.createHmac('sha1', IRECHARGE_CONFIG.PUBLIC_KEY).update(combinedResponse).digest('hex');
+        return computedHash === responseHash;
+    }
+
+    // Validate the TV response hash
+    static validateTvResponseHash(accessToken: string, smartcardNumber: string, responseHash: string): boolean {
+        const combinedResponse = `${accessToken}|${smartcardNumber}`;
+        const computedHash = crypto.createHmac('sha1', IRECHARGE_CONFIG.PUBLIC_KEY).update(combinedResponse).digest('hex');
+        return computedHash === responseHash;
+    }
+
+    // Validate the smartcard info response hash
+    static validateSmartcardInfoResponseHash(customerName: string, customerNumber: string, accessToken: string, responseHash: string): boolean {
+        const combinedResponse = `${customerName}|${customerNumber}|${accessToken}`;
         const computedHash = crypto.createHmac('sha1', IRECHARGE_CONFIG.PUBLIC_KEY).update(combinedResponse).digest('hex');
         return computedHash === responseHash;
     }
