@@ -4,7 +4,6 @@ import crypto from 'crypto';
 import { BadRequestError } from 'utils/customErrors';
 import { IRECHARGE_CONFIG, NODE_ENV } from 'utils/constants';
 
-
 export const getIRechargeBaseUrl = () => {
     return NODE_ENV === 'production' ? IRECHARGE_CONFIG.LIVE_URL : IRECHARGE_CONFIG.SANDBOX_URL;
 };
@@ -60,12 +59,20 @@ export class IRechargeConfigService {
         return this.makeApiRequest('get_electric_disco.php');
     }
 
+    static async vendAirtime(params: {
+        vtu_network: string;
+        vtu_amount: string;
+        vtu_number: string;
+        vtu_email: string;
+        reference_id: string;
+    }): Promise<any> {
+        return this.makeApiRequest('vend_airtime.php', params);
+    }
+
     // Validate the response hash
-    static validateResponseHash(customerName: string, accessToken: string, responseHash: string): boolean {
-        const combinedResponse = `${customerName}|${accessToken}`;
+    static validateResponseHash(customerName: string, Token: string, responseHash: string): boolean {
+        const combinedResponse = `${customerName}|${Token}`;
         const computedHash = crypto.createHmac('sha1', IRECHARGE_CONFIG.PUBLIC_KEY).update(combinedResponse).digest('hex');
         return computedHash === responseHash;
     }
-
-    // Add other methods for different API endpoints here
 }
