@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosError } from 'axios';
 import crypto from 'crypto';
@@ -7,6 +8,15 @@ import { IRECHARGE_CONFIG, NODE_ENV } from 'utils/constants';
 export const getIRechargeBaseUrl = () => {
     return NODE_ENV === 'production' ? IRECHARGE_CONFIG.LIVE_URL : IRECHARGE_CONFIG.SANDBOX_URL;
 };
+
+export enum IRECHARGE_DATA_NETWORKS {
+    MTN = 'MTN',
+    GLO = 'GLO',
+    Airtel = 'Airtel',
+    Etisalat = 'Etisalat',
+    Smile = 'Smile',
+    Spectranet = 'Spectranet',
+}
 
 export class IRechargeConfigService {
     private static generateHash(params: string[]): string {
@@ -123,6 +133,34 @@ export class IRechargeConfigService {
         });
     }
 
+    static async getDataBundles(params: {
+        data_network: IRECHARGE_DATA_NETWORKS;
+    }): Promise<any> {
+        return this.makeApiRequest('get_data_bundles.php', params);
+    }
+
+    static async getSmileInfo(params: {
+        receiver: string;
+    }): Promise<any> {
+        return this.makeApiRequest('get_smile_info.php', params);
+    }
+
+    static async vendData(params: {
+        vtu_network: IRECHARGE_DATA_NETWORKS;
+        reference_id: string;
+        vtu_number: string;
+        vtu_data: string;
+        vtu_email: string;
+    }): Promise<any> {
+        return this.makeApiRequest('vend_data.php', params);
+    }
+
+    static async getWalletBalance(): Promise<any> {
+        return this.makeApiRequest('get_wallet_balance.php', {
+            vendor_code: IRECHARGE_CONFIG.VENDOR_CODE,
+        });
+    }
+
     // Validate the response hash
     static validateResponseHash(customerName: string, accessToken: string, responseHash: string): boolean {
         const combinedResponse = `${customerName}|${accessToken}`;
@@ -147,6 +185,13 @@ export class IRechargeConfigService {
     // Validate the smartcard info response hash
     static validateSmartcardInfoResponseHash(customerName: string, customerNumber: string, accessToken: string, responseHash: string): boolean {
         const combinedResponse = `${customerName}|${customerNumber}|${accessToken}`;
+        const computedHash = crypto.createHmac('sha1', IRECHARGE_CONFIG.PUBLIC_KEY).update(combinedResponse).digest('hex');
+        return computedHash === responseHash;
+    }
+
+    // Validate the data vending response hash
+    static validateDataVendingResponseHash(accessToken: string, meterToken: string, responseHash: string): boolean {
+        const combinedResponse = `${accessToken}|${meterToken}`;
         const computedHash = crypto.createHmac('sha1', IRECHARGE_CONFIG.PUBLIC_KEY).update(combinedResponse).digest('hex');
         return computedHash === responseHash;
     }
