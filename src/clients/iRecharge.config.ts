@@ -85,6 +85,16 @@ export class IRechargeConfigService {
         return this.makeApiRequest('get_smartcard_info.php', params);
     }
 
+    static async getStarTimesSmartcardInfo(params: {
+        smartcard_number: string;
+        service_code: string;
+        reference_id: string;
+        tv_network: string;
+        tv_amount: string;
+    }): Promise<any> {
+        return this.makeApiRequest('get_smartcard_info.php', params);
+    }
+
     static async vendTv(params: {
         smartcard_number: string;
         access_token: string;
@@ -95,6 +105,22 @@ export class IRechargeConfigService {
         email: string;
     }): Promise<any> {
         return this.makeApiRequest('vend_tv.php', params);
+    }
+
+    static async vendStarTimesTv(params: {
+        smartcard_number: string;
+        access_token: string;
+        tv_network: string;
+        reference_id: string;
+        service_code: string;
+        phone: string;
+        email: string;
+    }): Promise<any> {
+        return this.makeApiRequest('vend_tv.php', {
+            ...params,
+            service_code: 'StarTimes',
+            tv_network: 'StarTimes',
+        });
     }
 
     // Validate the response hash
