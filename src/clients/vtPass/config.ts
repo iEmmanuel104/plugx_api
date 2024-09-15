@@ -4,18 +4,30 @@ import { VTPASS_CONFIG } from 'utils/constants';
 import {
     getVTpassBaseUrl, VTPASS_NETWORKS, VTpassPurchaseResponse, VTpassQueryResponse, VTpassWalletBalanceResponse,
     VTpassServiceCategoriesResponse, VTpassServicesResponse, VTpassVariationCodesResponse, VTpassProductOptionsResponse,
-    SmileEmailVerificationResponse,
+    SmileEmailVerificationResponse, SmartCardVerifyResponse,
 } from './types';
 
 
 // VTpass Configuration Service class for interacting with the VTpass API
 export class VTpassConfigService {
-    private static async makeApiRequest<T>(endpoint: string, method: 'GET' | 'POST', params: Record<string, string | number | boolean> = {}): Promise<T> {
+    private static async makeApiRequest<T>(endpoint: string, method: 'GET' | 'POST', params: Record<string, string | number | boolean> = {}, isBasicAuth: boolean = false): Promise<T> {
         const url = `${getVTpassBaseUrl()}${endpoint}`;
-        const headers = {
-            'api-key': VTPASS_CONFIG.API_KEY,
-            [method === 'GET' ? 'public-key' : 'secret-key']: method === 'GET' ? VTPASS_CONFIG.PUBLIC_KEY : VTPASS_CONFIG.SECRET_KEY,
-        };
+        let headers: Record<string, string>;
+
+        if (isBasicAuth) {
+            // DSTV-specific authentication
+            const auth = Buffer.from(`${VTPASS_CONFIG.USERNAME}:${VTPASS_CONFIG.PASSWORD}`).toString('base64');
+            headers = {
+                'Authorization': `Basic ${auth}`,
+                'Content-Type': 'application/json',
+            };
+        } else {
+            // Standard VTpass authentication
+            headers = {
+                'api-key': VTPASS_CONFIG.API_KEY,
+                [method === 'GET' ? 'public-key' : 'secret-key']: method === 'GET' ? VTPASS_CONFIG.PUBLIC_KEY : VTPASS_CONFIG.SECRET_KEY,
+            };
+        }
 
         try {
             const response = method === 'GET'
@@ -38,8 +50,9 @@ export class VTpassConfigService {
         billersCode?: string;
         variation_code?: string;
         quantity?: number;
-    }): Promise<VTpassPurchaseResponse> {
-        return this.makeApiRequest('pay', 'POST', params);
+        subscription_type?: 'change' | 'renew';
+    }, isBasicAuth: boolean = false): Promise<VTpassPurchaseResponse> {
+        return this.makeApiRequest('pay', 'POST', params, isBasicAuth);
     }
 
     static async queryTransactionStatus(params: {
@@ -82,5 +95,12 @@ export class VTpassConfigService {
         const time = now.toTimeString().slice(0, 5).replace(':', '');
         const randomString = Math.random().toString(36).substring(2, 6);
         return `${date}${time}${randomString}`;
+    }
+
+    static async verifySmartcard(params: {
+        billersCode: string;
+        serviceID: 'dstv';
+    }): Promise<SmartCardVerifyResponse> {
+        return this.makeApiRequest('merchant-verify', 'POST', params);
     }
 }

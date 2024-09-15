@@ -89,4 +89,6 @@ export const VTPASS_CONFIG = {
     SECRET_KEY: process.env.VTPASS_SECRET_KEY as string,
     SANDBOX_URL: 'https://sandbox.vtpass.com/api/',
     LIVE_URL: 'https://www.vtpass.com/api/',
+    USERNAME: process.env.VTPASS_USERNAME as string,
+    PASSWORD: process.env.VTPASS_PASSWORD as string,
 };
