@@ -153,18 +153,36 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     // Interface for the purchase product response from VTpass API
     requestId: string;
     transactionId?: string;
-    amount: string;
+    amount: string | number;
     transaction_date: TransactionDate;
     purchased_code: string;
+
     // spectranert card details
     cards?: CardDetails[];
+
     // tv subscriptioms
     content?: {
         transactions: TransactionDetails;
     };
+
     // showmax voucher
     Voucher?: string;
-    // Fields specific to prepaid electricity
+
+    // Fields for electricity
+    meterNumber?: string;
+    customerName?: string | null;
+    customerNumber?: string;
+    address?: string | null;
+    token?: string;
+    tokenAmount?: string;
+    tokenValue?: string;
+    businessCenter?: string | null;
+    exchangeReference?: string;
+    units?: string;
+    tariff?: string;
+    receiptNumber?: string;
+    energyAmount?: string | null;
+    energyVAT?: string | null;
     mainToken?: string;
     mainTokenDescription?: string;
     mainTokenUnits?: number;
@@ -177,16 +195,10 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     bonusTokenAmount?: number | null;
     tariffIndex?: string;
     debtDescription?: string;
-    // Fields specific to postpaid electricity
     utilityName?: string;
-    exchangeReference?: string;
     balance?: number | null;
-    // Fields specific to electricity requery
-    token?: string;
     resetToken?: string | null;
-    units?: string;
     fixChargeAmount?: number | null;
-    tariff?: string;
     taxAmount?: number | null;
 }
 
