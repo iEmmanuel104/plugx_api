@@ -9,7 +9,7 @@ export const getVTpassBaseUrl = (): string => {
 
 export enum VTPASS_NETWORKS {
     // Enum representing the available networks for VTpass services
-    
+
     // AIRTIMES NETWORKS SERVICE ID
     MTN_AIRTIME = 'mtn',
     GLO_AIRTIME = 'glo',
@@ -33,9 +33,13 @@ export enum VTPASS_NETWORKS {
     SHOWMAX = 'showmax',
 
     // ELECTRICITY NETWORKS SERVICE
-    IKEJA_ELECTRIC = 'ikeja-electric',
-    EKO_ELECTRIC = 'eko-electric',
-    KANO_ELECTRIC = 'kano-electric',
+    IKEDC = 'ikeja-electric',
+    EKEDC = 'eko-electric',
+    KEDCO = 'kano-electric',
+    PHED = 'portharcourt-electric',
+    JED = 'jos-electric',
+    IBEDC = 'ibadan-electric',
+
 }
 
 export enum SUBSCRIPTION_TYPES {
@@ -122,6 +126,10 @@ export interface ServiceCategory {
     name: string;
 }
 
+export interface Token {
+    Token: string;
+}
+
 export interface VTpassServiceCategoriesResponse extends BaseResponse {
     // Interface for the service categories response from VTpass API
     content: ServiceCategory[];
@@ -173,13 +181,13 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     customerName?: string | null;
     customerNumber?: string;
     address?: string | null;
-    token?: string;
+    token?: string | Token;  // Changed to allow both string and Token object
     tokenAmount?: string;
     tokenValue?: string;
     businessCenter?: string | null;
     exchangeReference?: string;
     units?: string;
-    tariff?: string;
+    tariff?: string | null;
     receiptNumber?: string;
     energyAmount?: string | null;
     energyVAT?: string | null;
@@ -200,6 +208,17 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     resetToken?: string | null;
     fixChargeAmount?: number | null;
     taxAmount?: number | null;
+    DebtTax?: number | null;
+    DebtAmount?: number | null;
+    DebtValue?: number | null;
+    DebtRem?: number | null;
+    FixedTax?: number | null;
+    FixedAmount?: number | null;
+    FixedValue?: number | null;
+    Amount?: string;
+    Tax?: string;
+    Units?: string;
+    Description?: string | null;
 }
 
 export interface VTpassProductOptionsResponse extends BaseResponse {
