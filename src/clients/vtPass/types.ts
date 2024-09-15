@@ -23,7 +23,14 @@ export enum VTPASS_NETWORKS {
     ETISALAT_SME_DATA = '9mobile-sme-data',
     SMILE_DATA = 'smile-direct',
     SPECTRANET_DATA = 'spectranet',
-    // TV NETWORKS SERVICE ID
+    // TV NETWORKS SERVICE 
+    DSTV = 'dstv',
+    GOTV = 'gotv',
+}
+
+export enum SUBSCRIPTION_TYPES {
+    RENEW = 'renew',
+    CHANGE = 'change',
 }
 
 // Interface for the common response structure from VTpass API
@@ -42,11 +49,11 @@ export interface TransactionDate {
 // Interface for the transaction details in the query response
 export interface TransactionDetails {
     status: string;
-    product_name: string;
-    unique_element: string;
-    unit_price: number;
+    product_name?: string;
+    unique_element?: string;
+    unit_price: string | number;
     quantity: number;
-    service_verification: null;
+    service_verification?: null;
     channel: string;
     commission: number;
     total_amount: number;
@@ -54,12 +61,25 @@ export interface TransactionDetails {
     type: string;
     email: string;
     phone: string;
-    name: null;
-    convinience_fee: number;
-    amount: number;
+    name?: null;
+    convinience_fee: string | number;
+    amount: string | number;
     platform: string;
     method: string;
     transactionId: string;
+    // New fields
+    is_api?: number;
+    customer_id?: number;
+    updated_at?: string;
+    created_at?: string;
+    id?: number;
+}
+
+export interface CardDetails {
+    serialNumber: string;
+    pin: string;
+    expiresOn: string;
+    value: number;
 }
 
 // Interface for a service in the services response
@@ -128,17 +148,16 @@ export interface VTpassWalletBalanceResponse extends BaseResponse {
 // Interface for the purchase product response from VTpass API
 export interface VTpassPurchaseResponse extends BaseResponse {
     requestId: string;
-    transactionId: string;
+    transactionId?: string;
     amount: string;
     transaction_date: TransactionDate;
     purchased_code: string;
     // spectranert card details
-    cards?: {
-        serialNumber: string;
-        pin: string;
-        expiresOn: string;
-        value: number;
-    }[];
+    cards?: CardDetails[];
+    // tv subscriptioms
+    content?: {
+        transactions: TransactionDetails;
+    };
 }
 
 // Interface for the product options response from VTpass API

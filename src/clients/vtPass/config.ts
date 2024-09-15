@@ -4,7 +4,7 @@ import { VTPASS_CONFIG } from 'utils/constants';
 import {
     getVTpassBaseUrl, VTPASS_NETWORKS, VTpassPurchaseResponse, VTpassQueryResponse, VTpassWalletBalanceResponse,
     VTpassServiceCategoriesResponse, VTpassServicesResponse, VTpassVariationCodesResponse, VTpassProductOptionsResponse,
-    SmileEmailVerificationResponse, SmartCardVerifyResponse,
+    SmileEmailVerificationResponse, SmartCardVerifyResponse, SUBSCRIPTION_TYPES,
 } from './types';
 
 
@@ -50,7 +50,7 @@ export class VTpassConfigService {
         billersCode?: string;
         variation_code?: string;
         quantity?: number;
-        subscription_type?: 'change' | 'renew';
+        subscription_type?: SUBSCRIPTION_TYPES;
     }, isBasicAuth: boolean = false): Promise<VTpassPurchaseResponse> {
         return this.makeApiRequest('pay', 'POST', params, isBasicAuth);
     }
@@ -99,7 +99,7 @@ export class VTpassConfigService {
 
     static async verifySmartcard(params: {
         billersCode: string;
-        serviceID: 'dstv';
+        serviceID: VTPASS_NETWORKS;
     }): Promise<SmartCardVerifyResponse> {
         return this.makeApiRequest('merchant-verify', 'POST', params);
     }
