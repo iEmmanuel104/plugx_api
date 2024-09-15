@@ -33,6 +33,11 @@ export enum SUBSCRIPTION_TYPES {
     CHANGE = 'change',
 }
 
+export enum METER_TYPES {
+    PREPAID = 'prepaid',
+    POSTPAID = 'postpaid',
+}
+
 export interface BaseResponse {
     // Interface for the common response structure from VTpass API
     code: string;
@@ -187,5 +192,21 @@ export interface SmartCardVerifyResponse extends BaseResponse {
         Current_Bouquet_Code?: string;
         Renewal_Amount?: number;
         Customer_ID?: number;
+    };
+}
+
+export interface MeterVerifyResponse extends BaseResponse {
+    content: {
+        Customer_Name: string;
+        Address: string;
+        Meter_Number: string;
+        Customer_Arrears: string;
+        Minimum_Amount: number;
+        Min_Purchase_Amount: number;
+        Can_Vend: string;
+        Business_Unit: string;
+        Customer_Account_Type: string;
+        Meter_Type: string;
+        WrongBillersCode: boolean;
     };
 }

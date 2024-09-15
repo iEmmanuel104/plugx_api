@@ -4,7 +4,7 @@ import { VTPASS_CONFIG } from 'utils/constants';
 import {
     getVTpassBaseUrl, VTPASS_NETWORKS, VTpassPurchaseResponse, VTpassWalletBalanceResponse, VTpassServiceCategoriesResponse,
     VTpassServicesResponse, VTpassVariationCodesResponse, VTpassProductOptionsResponse, SmileEmailVerificationResponse,
-    SmartCardVerifyResponse, SUBSCRIPTION_TYPES,
+    SmartCardVerifyResponse, SUBSCRIPTION_TYPES, METER_TYPES, MeterVerifyResponse,
 } from './types';
 
 
@@ -101,6 +101,14 @@ export class VTpassConfigService {
         billersCode: string;
         serviceID: VTPASS_NETWORKS;
     }): Promise<SmartCardVerifyResponse> {
+        return this.makeApiRequest('merchant-verify', 'POST', params);
+    }
+    
+    static async verifyMeterNumber(params: {
+        billersCode: string;
+        serviceID: VTPASS_NETWORKS;
+        type: METER_TYPES;
+    }): Promise<MeterVerifyResponse> {
         return this.makeApiRequest('merchant-verify', 'POST', params);
     }
 }
