@@ -82,3 +82,11 @@ export const IRECHARGE_CONFIG = {
     SANDBOX_URL: 'https://irecharge.com.ng/pwr_api_sandbox/v2/',
     LIVE_URL: 'https://irecharge.com.ng/pwr_api_live/v2/',
 };
+
+export const VTPASS_CONFIG = {
+    API_KEY: process.env.VTPASS_API_KEY as string,
+    PUBLIC_KEY: process.env.VTPASS_PUBLIC_KEY as string,
+    SECRET_KEY: process.env.VTPASS_SECRET_KEY as string,
+    SANDBOX_URL: 'https://sandbox.vtpass.com/api/',
+    LIVE_URL: 'https://www.vtpass.com/api/',
+};
