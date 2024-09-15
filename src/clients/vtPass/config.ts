@@ -8,7 +8,6 @@ import {
 } from './types';
 
 
-// VTpass Configuration Service class for interacting with the VTpass API
 export class VTpassConfigService {
     private static async makeApiRequest<T>(endpoint: string, method: 'GET' | 'POST', params: Record<string, string | number | boolean> = {}, isBasicAuth: boolean = false): Promise<T> {
         const url = `${getVTpassBaseUrl()}${endpoint}`;
@@ -41,7 +40,6 @@ export class VTpassConfigService {
         }
     }
 
-    // Purchases a product through the VTpass API
     static async purchaseProduct(params: {
         request_id: string;
         serviceID: VTPASS_NETWORKS;
@@ -81,7 +79,6 @@ export class VTpassConfigService {
         return this.makeApiRequest(`options?serviceID=${serviceID}&name=${name}`, 'GET');
     }
 
-    // Smile Network specific methods
     static async verifySmileEmail(params: {
         billersCode: string;
         serviceID: VTPASS_NETWORKS.SMILE_DATA;
@@ -117,7 +114,6 @@ export class VTpassConfigService {
 
         return this.makeApiRequest(endpoint, 'POST', params);
     }
-
 
     static generateRequestId(): string {
         const now = new Date();
