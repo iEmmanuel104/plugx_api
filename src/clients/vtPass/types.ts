@@ -48,6 +48,7 @@ export enum VTPASS_NETWORKS {
 
     // EDUCATION NETWORKS SERVICE
     WAEC_REGISTRATION = 'waec-registration',
+    WAEC_RESULT_CHECKER = 'waec',
 
 }
 
@@ -192,7 +193,6 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     customerNumber?: string;
     address?: string | null;
     token?: string | Token;  // Changed to allow both string and Token object
-    tokens?: string[];
     tokenAmount?: string;
     tokenValue?: string;
     businessCenter?: string | null;
@@ -230,6 +230,10 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     Tax?: string;
     Units?: string;
     Description?: string | null;
+
+    // education fileds
+    tokens?: string[];
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }

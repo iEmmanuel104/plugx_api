@@ -88,15 +88,7 @@ export class VTpassConfigService {
     }): Promise<SmileEmailVerificationResponse> {
         return this.makeApiRequest('merchant-verify/smile/email', 'POST', params);
     }
-
-    static generateRequestId(): string {
-        const now = new Date();
-        const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-        const time = now.toTimeString().slice(0, 5).replace(':', '');
-        const randomString = Math.random().toString(36).substring(2, 6);
-        return `${date}${time}${randomString}`;
-    }
-
+    
     static async verifySmartcard(params: {
         billersCode: string;
         serviceID: VTPASS_NETWORKS;
@@ -110,5 +102,28 @@ export class VTpassConfigService {
         type: METER_TYPES;
     }): Promise<MeterVerifyResponse> {
         return this.makeApiRequest('merchant-verify', 'POST', params);
+    }
+
+    static async vtPsssVerify(params: {
+        billersCode: string;
+        serviceID: VTPASS_NETWORKS;
+        type?: METER_TYPES | string;
+    }): Promise<SmileEmailVerificationResponse | SmartCardVerifyResponse | MeterVerifyResponse> {
+        let endpoint = 'merchant-verify';
+
+        if (params.serviceID === VTPASS_NETWORKS.SMILE_DATA) {
+            endpoint = 'merchant-verify/smile/email';
+        }
+
+        return this.makeApiRequest(endpoint, 'POST', params);
+    }
+
+
+    static generateRequestId(): string {
+        const now = new Date();
+        const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+        const time = now.toTimeString().slice(0, 5).replace(':', '');
+        const randomString = Math.random().toString(36).substring(2, 6);
+        return `${date}${time}${randomString}`;
     }
 }
