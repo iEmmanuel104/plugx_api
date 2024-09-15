@@ -39,6 +39,15 @@ export enum VTPASS_NETWORKS {
     PHED = 'portharcourt-electric',
     JED = 'jos-electric',
     IBEDC = 'ibadan-electric',
+    KAEDCO = 'kaduna-electric',
+    AEDC = 'abuja-electric',
+    EEDC = 'enugu-electric',
+    BEDC = 'benin-electric',
+    ABA = 'aba-electric',
+    YEDC = 'yola-electric',
+
+    // EDUCATION NETWORKS SERVICE
+    WAEC_REGISTRATION = 'waec-registration',
 
 }
 
@@ -92,6 +101,7 @@ export interface TransactionDetails {
     updated_at?: string;
     created_at?: string;
     id?: number;
+    giftcard_id?: null | string;
 }
 
 export interface CardDetails {
@@ -182,6 +192,7 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     customerNumber?: string;
     address?: string | null;
     token?: string | Token;  // Changed to allow both string and Token object
+    tokens?: string[];
     tokenAmount?: string;
     tokenValue?: string;
     businessCenter?: string | null;
@@ -219,6 +230,8 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     Tax?: string;
     Units?: string;
     Description?: string | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
 }
 
 export interface VTpassProductOptionsResponse extends BaseResponse {
