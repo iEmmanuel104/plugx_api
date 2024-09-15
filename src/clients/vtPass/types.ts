@@ -154,6 +154,30 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     };
     // showmax voucher
     Voucher?: string;
+    // Fields specific to prepaid electricity
+    mainToken?: string;
+    mainTokenDescription?: string;
+    mainTokenUnits?: number;
+    mainTokenTax?: number;
+    mainsTokenAmount?: number;
+    bonusToken?: string;
+    bonusTokenDescription?: string;
+    bonusTokenUnits?: number;
+    bonusTokenTax?: number | null;
+    bonusTokenAmount?: number | null;
+    tariffIndex?: string;
+    debtDescription?: string;
+    // Fields specific to postpaid electricity
+    utilityName?: string;
+    exchangeReference?: string;
+    balance?: number | null;
+    // Fields specific to electricity requery
+    token?: string;
+    resetToken?: string | null;
+    units?: string;
+    fixChargeAmount?: number | null;
+    tariff?: string;
+    taxAmount?: number | null;
 }
 
 export interface VTpassProductOptionsResponse extends BaseResponse {
