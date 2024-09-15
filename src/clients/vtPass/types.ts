@@ -127,17 +127,6 @@ export interface VTpassVariationCodesResponse extends BaseResponse {
     };
 }
 
-// Interface for the query transaction status response from VTpass API
-export interface VTpassQueryResponse extends BaseResponse {
-    requestId: string;
-    amount: string;
-    transaction_date: TransactionDate;
-    purchased_code: string;
-    content: {
-        transactions: TransactionDetails;
-    };
-}
-
 // Interface for the wallet balance response from VTpass API
 export interface VTpassWalletBalanceResponse extends BaseResponse {
     contents: {

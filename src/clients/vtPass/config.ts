@@ -2,9 +2,9 @@ import axios, { AxiosError } from 'axios';
 import { BadRequestError } from 'utils/customErrors';
 import { VTPASS_CONFIG } from 'utils/constants';
 import {
-    getVTpassBaseUrl, VTPASS_NETWORKS, VTpassPurchaseResponse, VTpassQueryResponse, VTpassWalletBalanceResponse,
-    VTpassServiceCategoriesResponse, VTpassServicesResponse, VTpassVariationCodesResponse, VTpassProductOptionsResponse,
-    SmileEmailVerificationResponse, SmartCardVerifyResponse, SUBSCRIPTION_TYPES,
+    getVTpassBaseUrl, VTPASS_NETWORKS, VTpassPurchaseResponse, VTpassWalletBalanceResponse, VTpassServiceCategoriesResponse,
+    VTpassServicesResponse, VTpassVariationCodesResponse, VTpassProductOptionsResponse, SmileEmailVerificationResponse,
+    SmartCardVerifyResponse, SUBSCRIPTION_TYPES,
 } from './types';
 
 
@@ -57,7 +57,7 @@ export class VTpassConfigService {
 
     static async queryTransactionStatus(params: {
         request_id: string;
-    }): Promise<VTpassQueryResponse> {
+    }): Promise<VTpassPurchaseResponse> {
         return this.makeApiRequest('requery', 'POST', params);
     }
 
