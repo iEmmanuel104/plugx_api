@@ -2,13 +2,13 @@
 import { VTPASS_CONFIG, NODE_ENV } from 'utils/constants';
 
 
-// Returns the base URL for VTpass API based on the current environment
 export const getVTpassBaseUrl = (): string => {
+    // Returns the base URL for VTpass API based on the current environment
     return NODE_ENV === 'production' ? VTPASS_CONFIG.LIVE_URL : VTPASS_CONFIG.SANDBOX_URL;
 };
 
-// Enum representing the available networks for VTpass services
 export enum VTPASS_NETWORKS {
+    // Enum representing the available networks for VTpass services
     // AIRTIMES NETWORKS SERVICE ID
     MTN_AIRTIME = 'mtn',
     GLO_AIRTIME = 'glo',
@@ -33,21 +33,21 @@ export enum SUBSCRIPTION_TYPES {
     CHANGE = 'change',
 }
 
-// Interface for the common response structure from VTpass API
 export interface BaseResponse {
+    // Interface for the common response structure from VTpass API
     code: string;
     response_description?: string;
 }
 
-// Interface for the transaction date structure
 export interface TransactionDate {
+    // Interface for the transaction date structure
     date: string;
     timezone_type: number;
     timezone: string;
 }
 
-// Interface for the transaction details in the query response
 export interface TransactionDetails {
+    // Interface for the transaction details in the query response
     status: string;
     product_name?: string;
     unique_element?: string;
@@ -82,8 +82,8 @@ export interface CardDetails {
     value: number;
 }
 
-// Interface for a service in the services response
 export interface Service {
+    // Interface for a service in the services response
     serviceID: string;
     name: string;
     minimium_amount: string;
@@ -93,32 +93,32 @@ export interface Service {
     image: string;
 }
 
-// Interface for a variation in the variation codes response
 export interface Variation {
+    // Interface for a variation in the variation codes response
     variation_code: string;
     name: string;
     variation_amount: string;
     fixedPrice: string;
 }
 
-// Interface for a service category in the service categories response
 export interface ServiceCategory {
+    // Interface for a service category in the service categories response
     identifier: string;
     name: string;
 }
 
-// Interface for the service categories response from VTpass API
 export interface VTpassServiceCategoriesResponse extends BaseResponse {
+    // Interface for the service categories response from VTpass API
     content: ServiceCategory[];
 }
 
-// Interface for the services response from VTpass API
 export interface VTpassServicesResponse extends BaseResponse {
+    // Interface for the services response from VTpass API
     content: Service[];
 }
 
-// Interface for the variation codes response from VTpass API
 export interface VTpassVariationCodesResponse extends BaseResponse {
+    // Interface for the variation codes response from VTpass API
     content: {
         ServiceName: string;
         serviceID: string;
@@ -127,15 +127,15 @@ export interface VTpassVariationCodesResponse extends BaseResponse {
     };
 }
 
-// Interface for the wallet balance response from VTpass API
 export interface VTpassWalletBalanceResponse extends BaseResponse {
+    // Interface for the wallet balance response from VTpass API
     contents: {
         balance: number;
     };
 }
 
-// Interface for the purchase product response from VTpass API
 export interface VTpassPurchaseResponse extends BaseResponse {
+    // Interface for the purchase product response from VTpass API
     requestId: string;
     transactionId?: string;
     amount: string;
@@ -151,8 +151,8 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     Voucher?: string;
 }
 
-// Interface for the product options response from VTpass API
 export interface VTpassProductOptionsResponse extends BaseResponse {
+    // Interface for the product options response from VTpass API
     content: {
         ServiceName: string;
         serviceID: string;
