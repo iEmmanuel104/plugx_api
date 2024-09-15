@@ -46,6 +46,13 @@ export interface VTpassPurchaseResponse extends BaseResponse {
     amount: string;
     transaction_date: TransactionDate;
     purchased_code: string;
+    // spectranert card details
+    cards?: {
+        serialNumber: string;
+        pin: string;
+        expiresOn: string;
+        value: number;
+    }[];
 }
 
 // Interface for the transaction details in the query response
@@ -143,5 +150,17 @@ export interface VTpassProductOptionsResponse extends BaseResponse {
         optionType: string;
         optionLabel: string;
         options: Record<string, string>;
+    };
+}
+export interface SmileEmailVerificationResponse extends BaseResponse {
+    content: {
+        Customer_Name: string;
+        AccountList: {
+            Account: {
+                AccountId: number;
+                FriendlyName: string;
+            };
+            NumberOfAccounts: number;
+        };
     };
 }

@@ -4,6 +4,7 @@ import { VTPASS_CONFIG } from 'utils/constants';
 import {
     getVTpassBaseUrl, VTPASS_NETWORKS, VTpassPurchaseResponse, VTpassQueryResponse, VTpassWalletBalanceResponse,
     VTpassServiceCategoriesResponse, VTpassServicesResponse, VTpassVariationCodesResponse, VTpassProductOptionsResponse,
+    SmileEmailVerificationResponse,
 } from './types';
 
 
@@ -34,6 +35,9 @@ export class VTpassConfigService {
         serviceID: VTPASS_NETWORKS;
         amount: number;
         phone: string;
+        billersCode?: string;
+        variation_code?: string;
+        quantity?: number;
     }): Promise<VTpassPurchaseResponse> {
         return this.makeApiRequest('pay', 'POST', params);
     }
@@ -56,12 +60,20 @@ export class VTpassConfigService {
         return this.makeApiRequest(`services?identifier=${identifier}`, 'GET');
     }
 
-    static async getVariationCodes(serviceID: string): Promise<VTpassVariationCodesResponse> {
+    static async getVariationCodes(serviceID: VTPASS_NETWORKS): Promise<VTpassVariationCodesResponse> {
         return this.makeApiRequest(`service-variations?serviceID=${serviceID}`, 'GET');
     }
 
-    static async getProductOptions(serviceID: string, name: string): Promise<VTpassProductOptionsResponse> {
+    static async getProductOptions(serviceID: VTPASS_NETWORKS, name: string): Promise<VTpassProductOptionsResponse> {
         return this.makeApiRequest(`options?serviceID=${serviceID}&name=${name}`, 'GET');
+    }
+
+    // Smile Network specific methods
+    static async verifySmileEmail(params: {
+        billersCode: string;
+        serviceID: VTPASS_NETWORKS.SMILE_DATA;
+    }): Promise<SmileEmailVerificationResponse> {
+        return this.makeApiRequest('merchant-verify/smile/email', 'POST', params);
     }
 
     static generateRequestId(): string {
