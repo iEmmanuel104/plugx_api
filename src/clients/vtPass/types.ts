@@ -9,11 +9,13 @@ export const getVTpassBaseUrl = (): string => {
 
 export enum VTPASS_NETWORKS {
     // Enum representing the available networks for VTpass services
+    
     // AIRTIMES NETWORKS SERVICE ID
     MTN_AIRTIME = 'mtn',
     GLO_AIRTIME = 'glo',
     AIRTEL_AIRTIME = 'airtel',
     ETISALAT_AIRTIME = 'etisalat',
+
     // DATA NETWORKS SERVICE ID
     MTN_DATA = 'mtn-data',
     GLO_DATA = 'glo-data',
@@ -23,9 +25,17 @@ export enum VTPASS_NETWORKS {
     ETISALAT_SME_DATA = '9mobile-sme-data',
     SMILE_DATA = 'smile-direct',
     SPECTRANET_DATA = 'spectranet',
+
     // TV NETWORKS SERVICE 
     DSTV = 'dstv',
     GOTV = 'gotv',
+    STARTIMES = 'startimes',
+    SHOWMAX = 'showmax',
+
+    // ELECTRICITY NETWORKS SERVICE
+    IKEJA_ELECTRIC = 'ikeja-electric',
+    EKO_ELECTRIC = 'eko-electric',
+    KANO_ELECTRIC = 'kano-electric',
 }
 
 export enum SUBSCRIPTION_TYPES {
@@ -225,12 +235,14 @@ export interface MeterVerifyResponse extends BaseResponse {
         Address: string;
         Meter_Number: string;
         Customer_Arrears: string;
-        Minimum_Amount: number;
-        Min_Purchase_Amount: number;
-        Can_Vend: string;
-        Business_Unit: string;
-        Customer_Account_Type: string;
+        Minimum_Amount: number | string;
+        Min_Purchase_Amount: number | string;
+        Customer_Account_Type: 'NMD' | 'MD';
         Meter_Type: string;
-        WrongBillersCode: boolean;
+        MAX_Purchase_Amount: number | string;
+        Can_Vend?: string;
+        Business_Unit?: string;
+        WrongBillersCode?: boolean;
+        Customer_Phone?: string;
     };
 }
