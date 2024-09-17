@@ -49,7 +49,7 @@ export enum VTPASS_NETWORKS {
     // EDUCATION NETWORKS SERVICE
     WAEC_REGISTRATION = 'waec-registration',
     WAEC_RESULT_CHECKER = 'waec',
-
+    JAMB = 'jamb',
 }
 
 export enum SUBSCRIPTION_TYPES {
