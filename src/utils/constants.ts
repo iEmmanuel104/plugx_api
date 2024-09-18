@@ -92,3 +92,11 @@ export const VTPASS_CONFIG = {
     USERNAME: process.env.VTPASS_USERNAME as string,
     PASSWORD: process.env.VTPASS_PASSWORD as string,
 };
+
+export const PAYSTACK_CONFIG = {
+    SECRET_KEY: process.env.PAYSTACK_SECRET_KEY as string,
+    PUBLIC_KEY: process.env.PAYSTACK_PUBLIC_KEY as string,
+    SANDBOX_URL: 'https://api.paystack.co',
+    LIVE_URL: 'https://api.paystack.co',
+    
+};
