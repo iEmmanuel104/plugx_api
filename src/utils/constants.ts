@@ -79,16 +79,16 @@ export const IRECHARGE_CONFIG = {
     VENDOR_CODE: process.env.IRECHARGE_VENDOR_CODE as string,
     PUBLIC_KEY: process.env.IRECHARGE_PUBLIC_KEY as string,
     PRIVATE_KEY: process.env.IRECHARGE_PRIVATE_KEY || '',
-    SANDBOX_URL: 'https://irecharge.com.ng/pwr_api_sandbox/v2/',
-    LIVE_URL: 'https://irecharge.com.ng/pwr_api_live/v2/',
+    SANDBOX_URL: 'https://irecharge.com.ng/pwr_api_sandbox/v2',
+    LIVE_URL: 'https://irecharge.com.ng/pwr_api_live/v2',
 };
 
 export const VTPASS_CONFIG = {
     API_KEY: process.env.VTPASS_API_KEY as string,
     PUBLIC_KEY: process.env.VTPASS_PUBLIC_KEY as string,
     SECRET_KEY: process.env.VTPASS_SECRET_KEY as string,
-    SANDBOX_URL: 'https://sandbox.vtpass.com/api/',
-    LIVE_URL: 'https://www.vtpass.com/api/',
+    SANDBOX_URL: 'https://sandbox.vtpass.com/api',
+    LIVE_URL: 'https://www.vtpass.com/api',
     USERNAME: process.env.VTPASS_USERNAME as string,
     PASSWORD: process.env.VTPASS_PASSWORD as string,
 };
