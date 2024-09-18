@@ -9,7 +9,7 @@ import {
 
 
 export class VTpassConfigService {
-    private static async makeApiRequest<T>(endpoint: string, method: 'GET' | 'POST', params: Record<string, string | number | boolean> = {}, isBasicAuth: boolean = false): Promise<T> {
+    private static async makeApiRequest<T>(endpoint: string, method: 'GET' | 'POST', params: Record<string, string | number | boolean | object> = {}, isBasicAuth: boolean = false): Promise<T> {
         const url = `${getVTpassBaseUrl()}/${endpoint}`;
         let headers: Record<string, string>;
 
