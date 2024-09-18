@@ -1,9 +1,9 @@
 import axios, { AxiosError, Method } from 'axios';
 import { PAYSTACK_CONFIG, NODE_ENV } from 'utils/constants';
-import { BadRequestError } from 'utils/customErrors';
+import { BadRequestError, UnauthorizedError, NotFoundError } from 'utils/customErrors';
+import { PaystackResponse, InitializeTransactionResponseData } from './types';
 
 export const getPaystackBaseUrl = (): string => {
-    // Returns the base URL for PAYSTACK API based on the current environment
     return NODE_ENV === 'production' ? PAYSTACK_CONFIG.LIVE_URL : PAYSTACK_CONFIG.SANDBOX_URL;
 };
 
@@ -11,7 +11,7 @@ export class PaystackConfigService {
     private static readonly BASE_URL = getPaystackBaseUrl();
     private static readonly SECRET_KEY = PAYSTACK_CONFIG.SECRET_KEY;
 
-    private static async makeApiRequest<T>(endpoint: string, method: Method, params: Record<string, unknown> = {}): Promise<T> {
+    private static async makeApiRequest<T>(endpoint: string, method: Method, params: Record<string, string | number | boolean | object> = {}): Promise<PaystackResponse<T>> {
         const url = `${this.BASE_URL}/${endpoint}`;
         const headers = {
             Authorization: `Bearer ${this.SECRET_KEY}`,
@@ -27,6 +27,18 @@ export class PaystackConfigService {
                     headers,
                     data: params,
                 });
+
+            // Check if the response status is not successful (2xx)
+            if (response.status < 200 || response.status >= 300) {
+                if (response.status === 400) {
+                    throw new BadRequestError(response.data.message || 'Bad Request');
+                } else if (response.status === 401) {
+                    throw new UnauthorizedError(response.data.message || 'Unauthorized');
+                } else if (response.status === 404) {
+                    throw new NotFoundError(response.data.message || 'Not Found');
+                }
+            }
+
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError;
@@ -35,15 +47,26 @@ export class PaystackConfigService {
         }
     }
 
-    static async initiateCharge(params: {
+    static async initializePaymentTransaction(params: {
+        amount: string;
         email: string;
-        amount: number;
-        card: { number: string; cvv: string; expiry_month: string; expiry_year: string };
-    }) {
-        return this.makeApiRequest('charge', 'POST', params);
+        currency?: string;
+        reference?: string;
+        callback_url?: string;
+        metadata?: string;
+    }): Promise<PaystackResponse<InitializeTransactionResponseData>> {
+        const defaultChannels: Array<'card' | 'bank' | 'ussd' | 'qr' | 'mobile_money' | 'bank_transfer' | 'eft'> =
+            ['card', 'bank', 'ussd', 'bank_transfer'];
+        
+        const updatedParams = {
+            ...params,
+            channels: defaultChannels,
+        };
+
+        return this.makeApiRequest('transaction/initialize', 'POST', updatedParams);
     }
 
-    static async verifyPayment(reference: string) {
+    static async verifyPaymentTransaction(reference: string) {
         return this.makeApiRequest(`transaction/verify/${reference}`, 'GET');
     }
 
