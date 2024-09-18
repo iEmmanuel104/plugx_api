@@ -1,16 +1,33 @@
-import axios from 'axios';
+import axios, { AxiosError, Method } from 'axios';
 import { PAYSTACK_CONFIG } from 'utils/constants';
 import { BadRequestError } from 'utils/customErrors';
 
 export class PaystackConfigService {
-    static readonly BASE_URL = 'https://api.paystack.co';
-    static readonly SECRET_KEY = PAYSTACK_CONFIG.SECRET_KEY;
+    private static readonly BASE_URL = 'https://api.paystack.co';
+    private static readonly SECRET_KEY = PAYSTACK_CONFIG.SECRET_KEY;
 
-    static getHeaders() {
-        return {
+    private static async makeApiRequest<T>(endpoint: string, method: Method, params: Record<string, unknown> = {}): Promise<T> {
+        const url = `${this.BASE_URL}${endpoint}`;
+        const headers = {
             Authorization: `Bearer ${this.SECRET_KEY}`,
             'Content-Type': 'application/json',
         };
+
+        try {
+            const response = method === 'GET'
+                ? await axios.get(url, { params, headers })
+                : await axios.request({
+                    url,
+                    method,
+                    headers,
+                    data: params,
+                });
+            return response.data;
+        } catch (error) {
+            const axiosError = error as AxiosError;
+            console.error(`Error in Paystack API request: ${endpoint}`, axiosError.response?.data || axiosError.message);
+            throw new BadRequestError('Error in Paystack API request');
+        }
     }
 
     static async initiateCharge(params: {
@@ -18,28 +35,11 @@ export class PaystackConfigService {
         amount: number;
         card: { number: string; cvv: string; expiry_month: string; expiry_year: string };
     }) {
-        try {
-            const response = await axios.post(
-                `${PaystackConfigService.BASE_URL}/charge`,
-                params,
-                { headers: PaystackConfigService.getHeaders() }
-            );
-            return response.data;
-        } catch (error) {
-            throw new BadRequestError('Error initiating charge');
-        }
+        return this.makeApiRequest('/charge', 'POST', params);
     }
 
     static async verifyPayment(reference: string) {
-        try {
-            const response = await axios.get(
-                `${PaystackConfigService.BASE_URL}/transaction/verify/${reference}`,
-                { headers: PaystackConfigService.getHeaders() }
-            );
-            return response.data;
-        } catch (error) {
-            throw new BadRequestError('Error verifying payment');
-        }
+        return this.makeApiRequest(`/transaction/verify/${reference}`, 'GET');
     }
 
     static async createRecurringCharge(params: {
@@ -47,16 +47,7 @@ export class PaystackConfigService {
         email: string;
         amount: number;
     }) {
-        try {
-            const response = await axios.post(
-                `${PaystackConfigService.BASE_URL}/transaction/charge_authorization`,
-                params,
-                { headers: PaystackConfigService.getHeaders() }
-            );
-            return response.data;
-        } catch (error) {
-            throw new BadRequestError('Error creating recurring charge');
-        }
+        return this.makeApiRequest('/transaction/charge_authorization', 'POST', params);
     }
 
     static async initiateWithdrawal(params: {
@@ -65,30 +56,10 @@ export class PaystackConfigService {
         recipient: string;
         reason: string;
     }) {
-        try {
-            const response = await axios.post(
-                `${PaystackConfigService.BASE_URL}/transfer`,
-                params,
-                { headers: PaystackConfigService.getHeaders() }
-            );
-            return response.data;
-        } catch (error) {
-            throw new BadRequestError('Error initiating withdrawal');
-        }
+        return this.makeApiRequest('/transfer', 'POST', params);
     }
 
     static async getTransactionHistory(params: { from: string; to: string; }) {
-        try {
-            const response = await axios.get(
-                `${PaystackConfigService.BASE_URL}/transaction`,
-                {
-                    params,
-                    headers: PaystackConfigService.getHeaders(),
-                }
-            );
-            return response.data;
-        } catch (error) {
-            throw new BadRequestError('Error fetching transaction history');
-        }
+        return this.makeApiRequest('/transaction', 'GET', params);
     }
 }
