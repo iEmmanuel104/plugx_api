@@ -10,6 +10,7 @@ import UserService, { IDynamicQueryOptions } from '../services/user.service';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 import { WEBSITE_URL } from '../utils/constants';
 import { Transaction } from 'sequelize';
+import WalletService from '../services/wallet.service';
 
 export default class AuthController {
 
@@ -74,7 +75,6 @@ export default class AuthController {
 
         await Database.transaction(async (transaction: Transaction) => {
 
-
             const user = await UserService.viewSingleUserByEmail(email, transaction);
 
             if (user.status.emailVerified) throw new BadRequestError('Email already verified');
@@ -83,6 +83,8 @@ export default class AuthController {
             if (!validCode) throw new BadRequestError('Invalid otp code');
 
             await user.update({ status: { ...user.status, emailVerified: true } }, { transaction });
+
+            await WalletService.createWallet(user.id, transaction);
 
             await AuthUtil.deleteToken({ user, tokenType: 'emailverification', tokenClass: 'code' });
 
