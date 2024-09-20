@@ -3,6 +3,7 @@ import {
     Table, Column, Model, DataType, ForeignKey, BelongsTo,
 } from 'sequelize-typescript';
 import User from './user.model';
+import Wallet from './financials/wallet.model';
 
 export enum TransactionType {
     DEPOSIT = 'deposit',
@@ -33,6 +34,13 @@ export default class Transaction extends Model<Transaction | ITransaction> {
     @BelongsTo(() => User)
         user: User;
 
+    @ForeignKey(() => Wallet)
+    @Column
+        walletId: string;
+
+    @BelongsTo(() => Wallet)
+        wallet: Wallet;
+
     @Column({
         type: DataType.ENUM,
         values: Object.values(TransactionType),
@@ -43,6 +51,9 @@ export default class Transaction extends Model<Transaction | ITransaction> {
     @Column({
         type: DataType.DECIMAL(10, 2),
         allowNull: false,
+        validate: {
+            min: 0,
+        },
     })
         amount: number;
 
