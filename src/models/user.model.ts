@@ -15,8 +15,18 @@ import Transaction from './transaction.model';
         include: [
             {
                 model: UserSettings,
+                attributes: ['joinDate', 'isBlocked','isKycVerified', 'isDeactivated', 'lastLogin'],
                 as: 'settings',
-                attributes: ['joinDate', 'isBlocked', 'isDeactivated', 'lastLogin', 'meta'],
+
+            },
+        ],
+    },
+    withWalletInfo: {
+        include: [
+            {
+                model: Wallet,
+                as: 'wallet',
+                attributes: ['balance', 'currency'],
             },
         ],
     },
