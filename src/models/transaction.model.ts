@@ -114,6 +114,13 @@ export default class Transaction extends Model<Transaction | ITransaction> {
     })
         description: string;
 
+    @Column({
+        type: DataType.DATE,
+        allowNull: false,
+        defaultValue: DataType.NOW,
+    })
+        transactionDate: Date;
+
     @BeforeValidate
     static validateChargeType(instance: Transaction) {
         if (instance.type === TransactionType.CHARGE && !instance.chargeType) {
@@ -138,4 +145,5 @@ export interface ITransaction {
     status: TransactionStatus;
     metadata?: object;
     description: string;
+    transactionDate: Date;
 }
