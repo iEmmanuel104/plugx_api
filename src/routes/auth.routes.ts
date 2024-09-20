@@ -17,7 +17,7 @@ router
     // transaction pin management
     .post('/pin/set', basicAuth('access'), AuthenticatedController(AuthController.setTransactionPin))
     .post('/pin/change', basicAuth('access'), AuthenticatedController(AuthController.changeTransactionPin))
-    .post('/pin/validate', basicAuth('access'), AuthenticatedController(AuthController.verifyTransactionPin))
+    .get('/pin/validate', basicAuth('access'), AuthenticatedController(AuthController.verifyTransactionPin))
     
     .post('/changepassword', basicAuth('access'), AuthenticatedController(AuthController.changePassword))
     .get('/logout', basicAuth('access'), AuthenticatedController(AuthController.logout))
