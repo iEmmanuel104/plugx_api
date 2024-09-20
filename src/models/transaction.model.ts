@@ -58,6 +58,12 @@ export default class Transaction extends Model<Transaction | ITransaction> {
         amount: number;
 
     @Column({
+        type: DataType.DECIMAL(10, 2),
+        allowNull: false,
+    })
+        previousBalance: number;
+
+    @Column({
         type: DataType.STRING,
         allowNull: false,
     })
@@ -93,11 +99,13 @@ export default class Transaction extends Model<Transaction | ITransaction> {
 export interface ITransaction {
     id?: string;
     userId: string;
+    walletId: string;
     type: TransactionType;
     amount: number;
+    previousBalance: number;
     currency: string;
     reference: string;
     status: TransactionStatus;
     metadata?: object;
-    description?: string;
+    description: string;
 }
