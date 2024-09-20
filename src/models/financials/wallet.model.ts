@@ -1,16 +1,16 @@
 import {
     Table, Column, Model, DataType, ForeignKey, BelongsTo, HasMany,
+    PrimaryKey, IsUUID, Default,
 } from 'sequelize-typescript';
 import User from '../user.model';
-import Transaction from 'models/transaction.model';
+import Transaction from '../transaction.model';
 
-Table;
+@Table
 export default class Wallet extends Model<Wallet | IWallet> {
-    @Column({
-        type: DataType.UUID,
-        defaultValue: DataType.UUIDV4,
-        primaryKey: true,
-    })
+    @IsUUID(4)
+    @PrimaryKey
+    @Default(DataType.UUIDV4)
+    @Column
         id: string;
 
     @ForeignKey(() => User)
