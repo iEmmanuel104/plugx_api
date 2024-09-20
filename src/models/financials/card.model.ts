@@ -1,16 +1,16 @@
 import {
     Table, Column, Model, DataType, ForeignKey, BelongsTo, BeforeCreate, BeforeUpdate,
+    Default, IsUUID, PrimaryKey,
 } from 'sequelize-typescript';
 import User from '../user.model';
-import { BadRequestError } from 'utils/customErrors';
+import { BadRequestError } from '../../utils/customErrors';
 
 @Table
 export default class Card extends Model<Card | ICard> {
-    @Column({
-        type: DataType.UUID,
-        defaultValue: DataType.UUIDV4,
-        primaryKey: true,
-    })
+    @IsUUID(4)
+    @PrimaryKey
+    @Default(DataType.UUIDV4)
+    @Column
         id: string;
 
     @ForeignKey(() => User)
