@@ -1,9 +1,11 @@
 import {
-    Table, Column, Model, DataType, ForeignKey, BelongsTo, HasMany,
+    Table, Column, Model, DataType, ForeignKey, BelongsTo, BeforeCreate, BeforeUpdate,
 } from 'sequelize-typescript';
 import User from '../user.model';
+import { BadRequestError } from 'utils/customErrors';
+
 @Table
-export class BankAccount extends Model<BankAccount | IBankAccount> {
+export default class BankAccount extends Model<BankAccount | IBankAccount> {
     @Column({
         type: DataType.UUID,
         defaultValue: DataType.UUIDV4,
@@ -21,40 +23,53 @@ export class BankAccount extends Model<BankAccount | IBankAccount> {
     @Column({
         type: DataType.STRING,
         allowNull: false,
+        validate: {
+            isNumeric: true,
+            len: [10, 10],
+        },
     })
-        account_number: string;
+        accountNumber: string;
 
     @Column({
         type: DataType.STRING,
         allowNull: false,
     })
-        account_name: string;
+        accountName: string;
 
     @Column({
         type: DataType.STRING,
         allowNull: false,
     })
-        bank_code: string;
+        bankCode: string;
 
     @Column({
         type: DataType.STRING,
         allowNull: false,
     })
-        bank_name: string;
+        bankName: string;
 
     @Column({
         type: DataType.STRING,
         allowNull: false,
     })
-        recipient_code: string;
+        recipientCode: string;
+
+    @BeforeCreate
+    @BeforeUpdate
+    static async checkLimit(instance: BankAccount) {
+        const count = await BankAccount.count({ where: { userId: instance.userId } });
+        if (count >= 3) {
+            throw new BadRequestError('User can have a maximum of 3 bank accounts');
+        }
+    }
 }
 
 export interface IBankAccount {
     id?: string;
     userId: string;
-    account_number: string;
-    account_name: string;
-    bank_code: string;
-    bank_name: string;
-    recipient_code: string;
+    accountNumber: string;
+    accountName: string;
+    bankCode: string;
+    bankName: string;
+    recipientCode: string;
 }
