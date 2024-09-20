@@ -14,23 +14,15 @@ router
     .post('/login', AuthController.login)
     .post('/resetpassword', AuthController.resetPassword)
 
-    // .post('/setpassword', basicAuth('setpassword'), AuthenticatedController(AuthController.setPassword))
+    // transaction pin management
+    .post('/pin/set', basicAuth('access'), AuthenticatedController(AuthController.setTransactionPin))
+    .post('/pin/change', basicAuth('access'), AuthenticatedController(AuthController.changeTransactionPin))
+    .post('/pin/validate', basicAuth('access'), AuthenticatedController(AuthController.verifyTransactionPin))
+    
     .post('/changepassword', basicAuth('access'), AuthenticatedController(AuthController.changePassword))
     .get('/logout', basicAuth('access'), AuthenticatedController(AuthController.logout))
     .get('/loggeduser', basicAuth('access'), AuthenticatedController(AuthController.getLoggedUserData))
     .get('/authtoken', basicAuth('refresh'));
-
-// Google authentication route
-// router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-// router.get(
-//     '/google/callback',
-//     passport.authenticate('google', {
-//         failureRedirect: '/register',
-//         session: false,
-//     }),
-//     AuthController.googleSignIn,
-// );
-
 
 export default router;
 
