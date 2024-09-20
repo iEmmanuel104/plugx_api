@@ -18,7 +18,7 @@ export enum TransactionStatus {
 }
 
 @Table
-export default class Transaction extends Model<Transaction> {
+export default class Transaction extends Model<Transaction | ITransaction> {
     @Column({
         type: DataType.UUID,
         defaultValue: DataType.UUIDV4,
@@ -71,6 +71,12 @@ export default class Transaction extends Model<Transaction> {
         allowNull: true,
     })
         metadata?: object;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+        description: string;
 }
 
 export interface ITransaction {
@@ -82,4 +88,5 @@ export interface ITransaction {
     reference: string;
     status: TransactionStatus;
     metadata?: object;
+    description?: string;
 }
