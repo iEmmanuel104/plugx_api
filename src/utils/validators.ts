@@ -43,6 +43,11 @@ class Validator {
         return passwordRegex.test(password);
     }
 
+    static isValidTransactionPin(transactionPin: string): boolean {
+        const transactionPinRegex = /^[0-9]{4}$/; // 4 digits
+        return transactionPinRegex.test(transactionPin);
+    }
+
     static isValidMimeType(mimeType: string): boolean {
         const imageTypes = [
             'image/jpeg', 'image/jpg',
