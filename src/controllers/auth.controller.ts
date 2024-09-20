@@ -311,8 +311,8 @@ export default class AuthController {
         const accessToken = await AuthUtil.generateToken({ type: 'access', user });
         const refreshToken = await AuthUtil.generateToken({ type: 'refresh', user });
 
-        // // update the last Login for the user
-        // await UserService.updateUserSettings(user.id, { lastLogin: new Date() });
+        // update the last Login for the user
+        await UserService.updateUserSettings(user.id, { lastLogin: new Date() });
 
         res.status(200).json({
             status: 'success',
@@ -365,7 +365,7 @@ export default class AuthController {
             throw new BadRequestError('Invalid transaction pin format');
         }
 
-        await Password.create({ userId: user.id, transactionPin });
+        await password!.update({ transactionPin });
 
         res.status(201).json({
             status: 'success',
