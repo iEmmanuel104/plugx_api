@@ -13,13 +13,6 @@ export default class Wallet extends Model<Wallet | IWallet> {
     @Column
         id: string;
 
-    @ForeignKey(() => User)
-    @Column
-        userId: string;
-
-    @BelongsTo(() => User)
-        user: User;
-
     @Column({
         type: DataType.DECIMAL(10, 2),
         allowNull: false,
@@ -36,6 +29,13 @@ export default class Wallet extends Model<Wallet | IWallet> {
         defaultValue: 'NGN',
     })
         currency: string;
+
+    @ForeignKey(() => User)
+    @Column
+        userId: string;
+
+    @BelongsTo(() => User)
+        user: User;
 
     @HasMany(() => Transaction)
         transactions: Transaction[];
