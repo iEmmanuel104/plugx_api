@@ -1,10 +1,14 @@
 import {
     Table, Column, Model, DataType, HasOne, Default, BeforeFind, Scopes,
-    IsEmail, IsUUID, PrimaryKey, Index, BeforeCreate, BeforeUpdate,
+    IsEmail, IsUUID, PrimaryKey, Index, BeforeCreate, BeforeUpdate, HasMany,
 } from 'sequelize-typescript';
 import Password from './password.model';
 import UserSettings from './userSettings.model';
 import { FindOptions } from 'sequelize';
+import BankAccount from './financials/bankAccount.model';
+import Card from './financials/card.model';
+import Wallet from './financials/wallet.model';
+import Transaction from './transaction.model';
 
 @Scopes(() => ({
     withSettings: {
@@ -123,7 +127,18 @@ export default class User extends Model<User | IUser> {
     @HasOne(() => UserSettings)
         settings: UserSettings;
 
+    @HasMany(() => BankAccount)
+        bankAccounts: BankAccount[];
 
+    @HasMany(() => Card)
+        cards: Card[];
+
+    @HasOne(() => Wallet)
+        wallet: Wallet;
+
+    @HasMany(() => Transaction)
+        transactions: Transaction[];
+    
     @BeforeFind
     static beforeFindHook(options: FindOptions) {
         if (options.where && 'email' in options.where && typeof options.where.email === 'string') {
