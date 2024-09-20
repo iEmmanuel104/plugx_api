@@ -349,4 +349,66 @@ export default class AuthController {
         });
     }
 
+    static async setTransactionPin(req: AuthenticatedRequest, res: Response) {
+        const { transactionPin } = req.body;
+
+        const user = req.user;
+
+        const password = await user.$get('password');
+
+        if (password && password.transactionPin) {
+            throw new BadRequestError('Transaction pin already set');
+        }
+
+        const validPin = Validator.isValidTransactionPin(transactionPin);
+        if (!validPin) {
+            throw new BadRequestError('Invalid transaction pin format');
+        }
+
+        await Password.create({ userId: user.id, transactionPin });
+
+        res.status(201).json({
+            status: 'success',
+            message: 'Transaction pin set successfully',
+            data: null,
+        });
+    }
+
+    static async verifyTransactionPin(req: AuthenticatedRequest, res: Response) {
+        const { transactionPin } = req.query;
+
+        const user = req.user;
+
+        await UserService.validateTransactionPin(user, transactionPin as string);
+       
+        res.status(200).json({
+            status: 'success',
+            message: 'Transaction pin verified successfully',
+            data: null,
+        });
+    }
+
+    static async changeTransactionPin(req: AuthenticatedRequest, res: Response) {
+        const { oldTransactionPin, newTransactionPin } = req.body;
+
+        const user = req.user;
+
+        const validPin = Validator.isValidTransactionPin(newTransactionPin);
+        if (!validPin) {
+            throw new BadRequestError('Invalid transaction pin format');
+        }
+        
+        await UserService.validateTransactionPin(user, oldTransactionPin);
+        
+        const password = await user.$get('password');
+
+        await password!.update({ transactionPin: newTransactionPin });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Transaction pin changed successfully',
+            data: null,
+        });
+    }
+
 }
