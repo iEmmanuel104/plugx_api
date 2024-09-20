@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import {
     Table, Column, Model, DataType, ForeignKey, BelongsTo,
+    BeforeValidate,
 } from 'sequelize-typescript';
 import User from './user.model';
 import Wallet from './financials/wallet.model';
@@ -16,6 +17,17 @@ export enum TransactionStatus {
     SUCCESS = 'success',
     FAILED = 'failed',
     PENDING = 'pending',
+}
+
+export enum ChargeType {
+    DATA = 'data',
+    AIRTIME = 'airtime',
+    ELECTRICITY = 'electricity',
+    CABLE_TV = 'cable_tv',
+    EDUCATION = 'education',
+    BETTING = 'betting',
+    GIFTCARD = 'giftcard',
+    OTHER = 'other',
 }
 
 @Table
@@ -47,6 +59,13 @@ export default class Transaction extends Model<Transaction | ITransaction> {
         allowNull: false,
     })
         type: TransactionType;
+
+    @Column({
+        type: DataType.ENUM,
+        values: Object.values(ChargeType),
+        allowNull: true,
+    })
+        chargeType: ChargeType | null;
 
     @Column({
         type: DataType.DECIMAL(10, 2),
@@ -94,6 +113,16 @@ export default class Transaction extends Model<Transaction | ITransaction> {
         allowNull: false,
     })
         description: string;
+
+    @BeforeValidate
+    static validateChargeType(instance: Transaction) {
+        if (instance.type === TransactionType.CHARGE && !instance.chargeType) {
+            throw new Error('Charge type is required for CHARGE transactions');
+        }
+        if (instance.type !== TransactionType.CHARGE && instance.chargeType) {
+            instance.chargeType = null;
+        }
+    }
 }
 
 export interface ITransaction {
@@ -101,6 +130,7 @@ export interface ITransaction {
     userId: string;
     walletId: string;
     type: TransactionType;
+    chargeType?: ChargeType;
     amount: number;
     previousBalance: number;
     currency: string;
