@@ -174,6 +174,7 @@ export interface IUser {
     firstName: string;
     lastName: string;
     otherName?: string;
+    gender?: string;
     status: {
         activated: boolean;
         emailVerified: boolean;
