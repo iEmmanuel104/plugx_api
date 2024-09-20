@@ -195,4 +195,21 @@ export default class UserService {
     static async deleteUser(user: User, transaction?: Transaction): Promise<void> {
         transaction ? await user.destroy({ transaction }) : await user.destroy();
     }
+
+    static async validateTransactionPin(user: User, pin: string): Promise<boolean> {
+        const password = await user.$get('password');
+
+        if (!password || !password.transactionPin) {
+            throw new BadRequestError('Please set a transaction pin');
+        }
+
+        const validPin = await password.isValidTransactionPin(pin);
+
+        if (!validPin) {
+            throw new BadRequestError('Invalid transaction pin');
+        }
+
+        return validPin;
+
+    }
 }
