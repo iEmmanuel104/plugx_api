@@ -11,10 +11,10 @@ import {
     MeterType,
     ProviderType,
     TVType,
-    TransactionStatus
-} from '../interfaces/utility.interface';
+    TransactionStatus,
+} from '../utils/interface';
 import VTPassService from './providers/vtpass.service';
-import IRechargeService from './providers/irecharge.service';
+import IRechargeService from './providers/iRecharge.service';
 import { logger } from '../utils/logger';
 import { TransactionType, TransactionStatus as DbTransactionStatus } from '../models/transaction.model';
 import TransactionService from './transaction.service';
@@ -60,7 +60,7 @@ export default class UtilityService implements IUtilityService {
                 description: `${transactionType} transaction initiated`,
                 transactionDate: new Date(),
                 previousBalance: 0, // This should be fetched from wallet service
-                metadata: { request: requestWithRef }
+                metadata: { request: requestWithRef },
             }, sequelizeTransaction);
 
             // First try with primary provider (VTPass)
@@ -89,8 +89,8 @@ export default class UtilityService implements IUtilityService {
                     ...transaction.metadata,
                     provider: response.providerType,
                     providerReference: response.providerReference,
-                    response: response.data
-                }
+                    response: response.data,
+                },
             }, { transaction: sequelizeTransaction });
 
             await sequelizeTransaction.commit();
@@ -105,21 +105,21 @@ export default class UtilityService implements IUtilityService {
                 transactionReference: reference,
                 message: `An error occurred while processing the ${transactionType} transaction`,
                 providerType: ProviderType.VTPASS, // Default provider
-                data: { error: error.message }
+                data: { error: error.message },
             };
         }
     }
 
     private mapProviderStatusToDbStatus(status: TransactionStatus): DbTransactionStatus {
         switch (status) {
-            case TransactionStatus.DELIVERED:
-                return DbTransactionStatus.SUCCESS;
-            case TransactionStatus.PENDING:
-                return DbTransactionStatus.PENDING;
-            case TransactionStatus.REVERSED:
-                return DbTransactionStatus.FAILED; // We handle this separately when updating wallet
-            default:
-                return DbTransactionStatus.FAILED;
+        case TransactionStatus.DELIVERED:
+            return DbTransactionStatus.SUCCESS;
+        case TransactionStatus.PENDING:
+            return DbTransactionStatus.PENDING;
+        case TransactionStatus.REVERSED:
+            return DbTransactionStatus.FAILED; // We handle this separately when updating wallet
+        default:
+            return DbTransactionStatus.FAILED;
         }
     }
 
@@ -172,9 +172,9 @@ export default class UtilityService implements IUtilityService {
             () => Promise.resolve({
                 success: false,
                 transactionStatus: TransactionStatus.FAILED,
-                transactionReference: request.reference || "",
+                transactionReference: request.reference || '',
                 message: 'Education services not supported by secondary provider',
-                providerType: ProviderType.IRECHARGE
+                providerType: ProviderType.IRECHARGE,
             }),
             TransactionType.CHARGE,
             request.userId
@@ -192,7 +192,7 @@ export default class UtilityService implements IUtilityService {
                     transactionStatus: TransactionStatus.FAILED,
                     transactionReference: reference,
                     message: 'Transaction not found',
-                    providerType: ProviderType.VTPASS
+                    providerType: ProviderType.VTPASS,
                 };
             }
 
@@ -213,7 +213,7 @@ export default class UtilityService implements IUtilityService {
                 transactionStatus: TransactionStatus.FAILED,
                 transactionReference: reference,
                 message: 'Error validating transaction',
-                providerType: ProviderType.VTPASS
+                providerType: ProviderType.VTPASS,
             };
         }
     }
