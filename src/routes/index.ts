@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import authRoute from './auth.routes';
 import userRoute from './user.routes';
-// import AdminRoutes from './Admin/admin.routes';
+import adminRoutes from './Admin/admin.routes';
 import walletRoutes from './wallet.routes';
 import cardRoutes from './card.routes';
 import bankAccountRoutes from './bankAccount.routes';
@@ -12,7 +12,7 @@ const router = Router();
 
 router
     .use('/auth', authRoute)
-    // .use('/iamPlugX', adminRoute)
+    .use('/iamplugx', adminRoutes)
     .use('/wallet', walletRoutes)
     .use('/card', cardRoutes)
     .use('/bankAccount', bankAccountRoutes)

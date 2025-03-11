@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
-import { BadRequestError } from 'utils/customErrors';
-import { VTPASS_CONFIG } from 'utils/constants';
+import { BadRequestError } from '../../utils/customErrors';
+import { VTPASS_CONFIG } from '../../utils/constants';
 import {
     getVTpassBaseUrl, VTPASS_NETWORKS, VTpassPurchaseResponse, VTpassWalletBalanceResponse, VTpassServiceCategoriesResponse,
     VTpassServicesResponse, VTpassVariationCodesResponse, VTpassProductOptionsResponse, SmileEmailVerificationResponse,

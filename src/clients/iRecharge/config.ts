@@ -37,6 +37,8 @@ export class IRechargeConfigService {
                     response_format: 'json',
                 },
             });
+
+            console.log({ responsefromIrecharge: response });
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError;

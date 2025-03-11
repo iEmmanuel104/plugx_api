@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { VTPASS_CONFIG, NODE_ENV } from 'utils/constants';
+import { VTPASS_CONFIG, NODE_ENV } from '../../utils/constants';
 
 
 export const getVTpassBaseUrl = (): string => {
