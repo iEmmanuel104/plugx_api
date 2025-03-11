@@ -6,6 +6,7 @@ import walletRoutes from './wallet.routes';
 import cardRoutes from './card.routes';
 import bankAccountRoutes from './bankAccount.routes';
 import transactionRoutes from './transaction.routes';
+import utilityRoutes from './utility.routes';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router
     .use('/card', cardRoutes)
     .use('/bankAccount', bankAccountRoutes)
     .use('/transaction', transactionRoutes)
+    .use('/utility', utilityRoutes)
     .use('/user', userRoute);
 
 export default router;

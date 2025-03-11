@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosError } from 'axios';
 import crypto from 'crypto';
-import { BadRequestError } from 'utils/customErrors';
-import { IRECHARGE_CONFIG, NODE_ENV } from 'utils/constants';
+import { BadRequestError } from '../../utils/customErrors';
+import { IRECHARGE_CONFIG, NODE_ENV } from '../../utils/constants';
 
 export const getIRechargeBaseUrl = () => {
     return NODE_ENV === 'production' ? IRECHARGE_CONFIG.LIVE_URL : IRECHARGE_CONFIG.SANDBOX_URL;
