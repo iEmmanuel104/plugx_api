@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// src/services/providers/irecharge.service.ts
-
 import axios from 'axios';
 import crypto from 'crypto';
 import {
@@ -15,12 +12,26 @@ import {
     ProviderType,
     TVType,
     TransactionStatus,
-    SubscriptionType,
 } from '../../utils/interface';
 import { logger } from '../../utils/logger';
 import { IRECHARGE_CONFIG, NODE_ENV } from '../../utils/constants';
 import HelperUtils from '../../utils/helpers';
-import { IRECHARGE_DATA_NETWORKS } from '../../clients/iRecharge.config';
+import { IRECHARGE_DATA_NETWORKS } from '../../clients/iRecharge/config';
+import { 
+    IRechargeBaseResponse, 
+    IRechargeTransactionStatusResponse, 
+    IRechargeAirtimeResponse, 
+    IRechargeDataResponse, 
+    IRechargeElectricityResponse, 
+    IRechargeSmartCardInfoResponse, 
+    IRechargeSmartCardResponse, 
+    IRechargeDataBundlesResponse, 
+    IRechargeDataBundle,
+    IRechargePackage,
+    IRechargePackagesResponse,
+    IDataBundleInfo,
+    ITVPackageInfo,
+} from '../../clients/iRecharge/types';
 
 export default class IRechargeService implements IUtilityProvider {
     private readonly baseUrl: string;
@@ -70,7 +81,7 @@ export default class IRechargeService implements IUtilityProvider {
     }
 
     private mapStatusToEnum(status: string): TransactionStatus {
-        if (status === 'completed' || status === 'successful') {
+        if (status === 'completed' || status === 'successful' || status === '200') {
             return TransactionStatus.DELIVERED;
         } else if (status === 'pending') {
             return TransactionStatus.PENDING;
@@ -81,29 +92,17 @@ export default class IRechargeService implements IUtilityProvider {
         }
     }
 
-    private mapIRechargeResponse(response: any, reference: string): IProviderResponse {
-        let transactionStatus = TransactionStatus.FAILED;
-        let message = 'Transaction failed';
-        let success = false;
-
-        // For successful response
-        if (response && response.status === '200') {
-            transactionStatus = TransactionStatus.DELIVERED;
-            success = true;
-            message = 'Transaction successful';
-        } else if (response && response.status === 'pending') {
-            transactionStatus = TransactionStatus.PENDING;
-            message = 'Transaction pending';
-        } else {
-            message = response?.message || 'Transaction failed';
-        }
+    private mapIRechargeResponse(response: IRechargeBaseResponse, reference: string): IProviderResponse {
+        const transactionStatus = this.mapStatusToEnum(response.status);
+        const success = response.status === '200';
+        const message = response.message || 'Transaction processed';
 
         return {
             success,
             transactionStatus,
             transactionReference: reference,
             message,
-            providerReference: response?.transaction_id || '',
+            providerReference: response.transaction_id || '',
             providerType: ProviderType.IRECHARGE,
             data: response,
         };
@@ -117,7 +116,7 @@ export default class IRechargeService implements IUtilityProvider {
                 reference_id: reference,
             };
 
-            const response = await this.makeRequest('get_transaction_status.php', params);
+            const response = await this.makeRequest<IRechargeTransactionStatusResponse>('get_transaction_status.php', params);
 
             return this.mapIRechargeResponse(response, reference);
         } catch (error) {
@@ -158,7 +157,7 @@ export default class IRechargeService implements IUtilityProvider {
                 reference_id: reference,
             };
 
-            const response = await this.makeRequest('vend_airtime.php', params);
+            const response = await this.makeRequest<IRechargeAirtimeResponse>('vend_airtime.php', params);
 
             return this.mapIRechargeResponse(response, reference);
         } catch (error) {
@@ -167,7 +166,7 @@ export default class IRechargeService implements IUtilityProvider {
                 success: false,
                 transactionStatus: TransactionStatus.FAILED,
                 transactionReference: request.reference || '',
-                message: 'Airtime purchase failed',
+                message: error instanceof Error ? error.message : 'Airtime purchase failed',
                 providerType: ProviderType.IRECHARGE,
             };
         }
@@ -199,7 +198,7 @@ export default class IRechargeService implements IUtilityProvider {
                 vtu_email: request.email || request.phone,
             };
 
-            const response = await this.makeRequest('vend_data.php', params);
+            const response = await this.makeRequest<IRechargeDataResponse>('vend_data.php', params);
 
             return this.mapIRechargeResponse(response, reference);
         } catch (error) {
@@ -208,7 +207,7 @@ export default class IRechargeService implements IUtilityProvider {
                 success: false,
                 transactionStatus: TransactionStatus.FAILED,
                 transactionReference: request.reference || '',
-                message: 'Data purchase failed',
+                message: error instanceof Error ? error.message : 'Data purchase failed',
                 providerType: ProviderType.IRECHARGE,
             };
         }
@@ -228,7 +227,6 @@ export default class IRechargeService implements IUtilityProvider {
                 'abuja': 'AEDC',
                 'enugu': 'EEDC',
                 'benin': 'BEDC',
-                // iRecharge might not support some discos
             };
 
             const disco = discoMap[request.disco.toLowerCase()];
@@ -250,12 +248,12 @@ export default class IRechargeService implements IUtilityProvider {
                 params.email = request.email;
             }
 
-            const endpoint = request.meterType.toLowerCase() === 'prepaid' ? 'vend_power.php' : 'vend_power.php';
+            const endpoint = 'vend_power.php';
 
             // For prepaid meters, we need to get the access token first
-            if (request.meterType.toLowerCase() === 'prepaid') {
+            if (request.meterType.toLowerCase() === MeterType.PREPAID.toLowerCase()) {
                 // Get meter info to retrieve access token
-                const meterInfo = await this.makeRequest('get_meter_info.php', {
+                const meterInfo = await this.makeRequest<IRechargeElectricityResponse>('get_meter_info.php', {
                     reference_id: reference,
                     meter: request.meterNumber,
                     disco: disco,
@@ -269,7 +267,7 @@ export default class IRechargeService implements IUtilityProvider {
                 }
             }
 
-            const response = await this.makeRequest(endpoint, params);
+            const response = await this.makeRequest<IRechargeElectricityResponse>(endpoint, params);
 
             return this.mapIRechargeResponse(response, reference);
         } catch (error) {
@@ -278,7 +276,7 @@ export default class IRechargeService implements IUtilityProvider {
                 success: false,
                 transactionStatus: TransactionStatus.FAILED,
                 transactionReference: request.reference || '',
-                message: 'Electricity purchase failed',
+                message: error instanceof Error ? error.message : 'Electricity purchase failed',
                 providerType: ProviderType.IRECHARGE,
             };
         }
@@ -302,15 +300,22 @@ export default class IRechargeService implements IUtilityProvider {
             const reference = request.reference || this.generateReferenceId();
 
             // First validate the smartcard
-            const smartcardInfo = await this.makeRequest('get_smartcard_info.php', {
+            const smartcardParams: Record<string, string> = {
                 smartcard_number: request.smartCardNumber,
                 reference_id: reference,
                 tv_network: tvNetwork,
                 service_code: tvNetwork === 'StarTimes' ? 'StarTimes' : request.packageCode || '',
-            });
+            };
+
+            // StarTimes requires tv_amount
+            if (tvNetwork === 'StarTimes' && request.amount) {
+                smartcardParams.tv_amount = request.amount.toString();
+            }
+
+            const smartcardInfo = await this.makeRequest<IRechargeSmartCardInfoResponse>('get_smartcard_info.php', smartcardParams);
 
             if (!smartcardInfo || smartcardInfo.status !== '200') {
-                throw new Error('Failed to validate smartcard');
+                throw new Error(smartcardInfo?.message || 'Failed to validate smartcard');
             }
 
             // Now purchase the subscription
@@ -327,7 +332,7 @@ export default class IRechargeService implements IUtilityProvider {
                 params.email = request.email;
             }
 
-            const response = await this.makeRequest('vend_tv.php', params);
+            const response = await this.makeRequest<IRechargeSmartCardResponse>('vend_tv.php', params);
 
             return this.mapIRechargeResponse(response, reference);
         } catch (error) {
@@ -336,15 +341,14 @@ export default class IRechargeService implements IUtilityProvider {
                 success: false,
                 transactionStatus: TransactionStatus.FAILED,
                 transactionReference: request.reference || '',
-                message: 'TV subscription failed',
+                message: error instanceof Error ? error.message : 'TV subscription failed',
                 providerType: ProviderType.IRECHARGE,
             };
         }
     }
 
     async purchaseEducation(request: IEducationRequest): Promise<IProviderResponse> {
-        // iRecharge might not support education payments like WAEC and JAMB
-        // Returning a failed response
+        // iRecharge doesn't support education payments like WAEC and JAMB
         return {
             success: false,
             transactionStatus: TransactionStatus.FAILED,
@@ -354,7 +358,7 @@ export default class IRechargeService implements IUtilityProvider {
         };
     }
 
-    async validateMeterNumber(disco: string, meterNumber: string, meterType: MeterType): Promise<any> {
+    async validateMeterNumber(disco: string, meterNumber: string, meterType: MeterType): Promise<Record<string, unknown>> {
         try {
             // Map disco to the expected format for iRecharge
             const discoMap: { [key: string]: string } = {
@@ -370,43 +374,50 @@ export default class IRechargeService implements IUtilityProvider {
                 'benin': 'BEDC',
             };
 
-            const disco = discoMap[disco.toLowerCase()];
-            if (!disco) {
+            const discoCode = discoMap[disco.toLowerCase()];
+            if (!discoCode) {
                 throw new Error(`Unsupported disco: ${disco}`);
             }
 
             const reference = `validate_${Date.now()}`;
 
-            const response = await this.makeRequest('get_meter_info.php', {
+            const response = await this.makeRequest<IRechargeElectricityResponse>('get_meter_info.php', {
                 reference_id: reference,
                 meter: meterNumber,
-                disco: disco,
+                disco: discoCode,
             });
 
             if (response && response.status === '200') {
                 return {
                     success: true,
+                    message: 'Meter validation successful',
                     data: {
                         customerName: response.customer_name || '',
                         address: response.address || '',
                         meterNumber: meterNumber,
                         meterType: meterType,
+                        accessToken: response.access_token || '',
                     },
-                };
+                } as Record<string, unknown>;
             }
 
             return {
                 success: false,
                 message: response?.message || 'Meter validation failed',
-                data: response,
-            };
+                data: {
+                    customerName: '',
+                    address: '',
+                    meterNumber: meterNumber,
+                    meterType: meterType,
+                },
+            } as Record<string, unknown>;
         } catch (error) {
             logger.error('iRecharge meter validation error', error);
             throw error;
         }
     }
 
-    async validateSmartCardNumber(provider: TVType, smartCardNumber: string): Promise<any> {
+    async validateSmartCardNumber(provider: TVType, smartCardNumber: string): Promise<Record<string, unknown>> {
         try {
             // Map TV provider to iRecharge expected format
             const providerMap: { [key: string]: string } = {
@@ -436,33 +447,39 @@ export default class IRechargeService implements IUtilityProvider {
                 params.tv_amount = '1000'; // Default amount for validation
             }
 
-            const response = await this.makeRequest('get_smartcard_info.php', params);
+            const response = await this.makeRequest<IRechargeSmartCardInfoResponse>('get_smartcard_info.php', params);
 
             if (response && response.status === '200') {
                 return {
                     success: true,
+                    message: 'Smartcard validation successful',
                     data: {
                         customerName: response.customer_name || '',
                         customerNumber: response.customer_number || '',
                         dueDate: response.due_date || '',
                         status: response.status || '',
                         smartCardNumber: smartCardNumber,
+                        accessToken: response.access_token || '',
                     },
-                };
+                } as Record<string, unknown>;
             }
 
             return {
                 success: false,
                 message: response?.message || 'Smartcard validation failed',
-                data: response,
-            };
+                data: {
+                    customerName: '',
+                    customerNumber: '',
+                    smartCardNumber: smartCardNumber,
+                },
+            } as Record<string, unknown>;
         } catch (error) {
             logger.error('iRecharge smartcard validation error', error);
             throw error;
         }
     }
 
-    async validateDataBundle(network: string): Promise<any[]> {
+    async validateDataBundle(network: string): Promise<IDataBundleInfo[]> {
         try {
             // Convert network to iRecharge expected format
             const networkMap: { [key: string]: IRECHARGE_DATA_NETWORKS } = {
@@ -478,16 +495,17 @@ export default class IRechargeService implements IUtilityProvider {
                 throw new Error(`Unsupported network: ${network}`);
             }
 
-            const response = await this.makeRequest('get_data_bundles.php', {
+            const response = await this.makeRequest<IRechargeDataBundlesResponse>('get_data_bundles.php', {
                 data_network: vtuNetwork,
             });
 
             if (response && response.status === '200' && response.bundles) {
                 // Transform the data to match the expected format
-                return response.bundles.map((bundle: any) => ({
+                return response.bundles.map((bundle: IRechargeDataBundle) => ({
                     variation_code: bundle.code,
                     name: bundle.name,
                     variation_amount: bundle.price,
+                    validity: bundle.validity || '',
                     fixedPrice: 'Yes',
                 }));
             }
@@ -499,7 +517,7 @@ export default class IRechargeService implements IUtilityProvider {
         }
     }
 
-    async validateTVPackages(provider: TVType): Promise<any[]> {
+    async validateTVPackages(provider: TVType): Promise<ITVPackageInfo[]> {
         try {
             // Map TV provider to iRecharge expected format
             const providerMap: { [key: string]: string } = {
@@ -514,13 +532,13 @@ export default class IRechargeService implements IUtilityProvider {
                 throw new Error(`Unsupported TV provider: ${provider}`);
             }
 
-            const response = await this.makeRequest('get_tv_bouquet.php', {
+            const response = await this.makeRequest<IRechargePackagesResponse>('get_tv_bouquet.php', {
                 tv_network: tvNetwork,
             });
 
             if (response && response.status === '200' && response.bouquets) {
                 // Transform the data to match the expected format
-                return response.bouquets.map((bouquet: any) => ({
+                return response.bouquets.map((bouquet: IRechargePackage) => ({
                     variation_code: bouquet.code,
                     name: bouquet.name,
                     variation_amount: bouquet.price,

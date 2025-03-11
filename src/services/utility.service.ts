@@ -1,5 +1,3 @@
-// src/services/utility.service.ts
-
 import {
     IUtilityService,
     IAirtimeRequest,
@@ -20,6 +18,7 @@ import { TransactionType, TransactionStatus as DbTransactionStatus } from '../mo
 import TransactionService from './transaction.service';
 import { Database } from '../models';
 import { v4 as uuidv4 } from 'uuid';
+import WalletService from './wallet.service';
 
 export default class UtilityService implements IUtilityService {
     private readonly vtpassService: VTPassService;
@@ -36,8 +35,8 @@ export default class UtilityService implements IUtilityService {
      */
     private async executeWithFallback<T extends { reference?: string }>(
         request: T,
-        primaryAction: (req: T) => Promise<IProviderResponse>,
-        fallbackAction: (req: T) => Promise<IProviderResponse>,
+        primaryAction: (request: T) => Promise<IProviderResponse>,
+        fallbackAction: (request: T) => Promise<IProviderResponse>,
         transactionType: TransactionType,
         userId: string
     ): Promise<IProviderResponse> {
@@ -49,17 +48,21 @@ export default class UtilityService implements IUtilityService {
         const sequelizeTransaction = await Database.transaction();
 
         try {
+            // Get user's wallet
+            const wallet = await WalletService.getWallet(userId);
+            
             // Create initial pending transaction in our database
             const transaction = await TransactionService.createTransaction({
                 userId,
+                walletId: wallet.id, 
                 type: transactionType,
-                amount: 'amount' in request ? (request as any).amount : 0,
+                amount: 'amount' in request ? Number((request as Record<string, unknown>).amount) : 0,
                 currency: 'NGN',
                 reference,
                 status: DbTransactionStatus.PENDING,
                 description: `${transactionType} transaction initiated`,
                 transactionDate: new Date(),
-                previousBalance: 0, // This should be fetched from wallet service
+                previousBalance: wallet.balance, 
                 metadata: { request: requestWithRef },
             }, sequelizeTransaction);
 
@@ -95,17 +98,18 @@ export default class UtilityService implements IUtilityService {
 
             await sequelizeTransaction.commit();
             return response;
-        } catch (error) {
+        } catch (error: unknown) {
             await sequelizeTransaction.rollback();
-            logger.error(`Error processing ${transactionType}`, { error, reference });
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            logger.error(`Error processing ${transactionType}`, { error: errorMessage, reference });
 
             return {
                 success: false,
                 transactionStatus: TransactionStatus.FAILED,
                 transactionReference: reference,
                 message: `An error occurred while processing the ${transactionType} transaction`,
-                providerType: ProviderType.VTPASS, // Default provider
-                data: { error: error.message },
+                providerType: ProviderType.VTPASS, 
+                data: { error: errorMessage },
             };
         }
     }
@@ -117,7 +121,7 @@ export default class UtilityService implements IUtilityService {
         case TransactionStatus.PENDING:
             return DbTransactionStatus.PENDING;
         case TransactionStatus.REVERSED:
-            return DbTransactionStatus.FAILED; // We handle this separately when updating wallet
+            return DbTransactionStatus.FAILED; 
         default:
             return DbTransactionStatus.FAILED;
         }
@@ -127,8 +131,8 @@ export default class UtilityService implements IUtilityService {
     async purchaseAirtime(request: IAirtimeRequest & { userId: string }): Promise<IProviderResponse> {
         return this.executeWithFallback(
             request,
-            (req) => this.vtpassService.purchaseAirtime(req),
-            (req) => this.irechargeService.purchaseAirtime(req),
+            (request) => this.vtpassService.purchaseAirtime(request),
+            (request) => this.irechargeService.purchaseAirtime(request),
             TransactionType.CHARGE,
             request.userId
         );
@@ -137,8 +141,8 @@ export default class UtilityService implements IUtilityService {
     async purchaseData(request: IDataRequest & { userId: string }): Promise<IProviderResponse> {
         return this.executeWithFallback(
             request,
-            (req) => this.vtpassService.purchaseData(req),
-            (req) => this.irechargeService.purchaseData(req),
+            (request) => this.vtpassService.purchaseData(request),
+            (request) => this.irechargeService.purchaseData(request),
             TransactionType.CHARGE,
             request.userId
         );
@@ -147,8 +151,8 @@ export default class UtilityService implements IUtilityService {
     async purchaseElectricity(request: IElectricityRequest & { userId: string }): Promise<IProviderResponse> {
         return this.executeWithFallback(
             request,
-            (req) => this.vtpassService.purchaseElectricity(req),
-            (req) => this.irechargeService.purchaseElectricity(req),
+            (request) => this.vtpassService.purchaseElectricity(request),
+            (request) => this.irechargeService.purchaseElectricity(request),
             TransactionType.CHARGE,
             request.userId
         );
@@ -157,8 +161,8 @@ export default class UtilityService implements IUtilityService {
     async purchaseTV(request: ITVRequest & { userId: string }): Promise<IProviderResponse> {
         return this.executeWithFallback(
             request,
-            (req) => this.vtpassService.purchaseTV(req),
-            (req) => this.irechargeService.purchaseTV(req),
+            (request) => this.vtpassService.purchaseTV(request),
+            (request) => this.irechargeService.purchaseTV(request),
             TransactionType.CHARGE,
             request.userId
         );
@@ -168,7 +172,7 @@ export default class UtilityService implements IUtilityService {
         // Since iRecharge doesn't support education services, we'll only use VTPass
         return this.executeWithFallback(
             request,
-            (req) => this.vtpassService.purchaseEducation(req),
+            (request) => this.vtpassService.purchaseEducation(request),
             () => Promise.resolve({
                 success: false,
                 transactionStatus: TransactionStatus.FAILED,
@@ -184,7 +188,7 @@ export default class UtilityService implements IUtilityService {
     async validateTransaction(reference: string): Promise<IProviderResponse> {
         try {
             // First, check our database for the transaction
-            const transaction = await TransactionService.getTransactionByReference(reference);
+            const transaction = await TransactionService.findTransactionByReference(reference);
 
             if (!transaction) {
                 return {
@@ -197,7 +201,7 @@ export default class UtilityService implements IUtilityService {
             }
 
             // If we have a provider stored in metadata, use that provider to check status
-            const metadata = transaction.metadata as any;
+            const metadata = transaction.metadata as Record<string, unknown>;
             const provider = metadata?.provider || ProviderType.VTPASS;
 
             // Now validate with the appropriate provider
@@ -206,8 +210,9 @@ export default class UtilityService implements IUtilityService {
             } else {
                 return this.vtpassService.validateTransaction(reference);
             }
-        } catch (error) {
-            logger.error('Error validating transaction', { error, reference });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            logger.error('Error validating transaction', { error: errorMessage, reference });
             return {
                 success: false,
                 transactionStatus: TransactionStatus.FAILED,
@@ -218,7 +223,7 @@ export default class UtilityService implements IUtilityService {
         }
     }
 
-    async validateMeterNumber(disco: string, meterNumber: string, meterType: MeterType): Promise<any> {
+    async validateMeterNumber(disco: string, meterNumber: string, meterType: MeterType): Promise<Record<string, unknown>> {
         try {
             // Try with VTPass first
             try {
@@ -232,13 +237,14 @@ export default class UtilityService implements IUtilityService {
 
             // Fallback to iRecharge
             return this.irechargeService.validateMeterNumber(disco, meterNumber, meterType);
-        } catch (error) {
-            logger.error('Error validating meter number', { error, disco, meterNumber, meterType });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            logger.error('Error validating meter number', { error: errorMessage, disco, meterNumber, meterType });
             throw error;
         }
     }
 
-    async validateSmartCardNumber(provider: TVType, smartCardNumber: string): Promise<any> {
+    async validateSmartCardNumber(provider: TVType, smartCardNumber: string): Promise<Record<string, unknown>> {
         try {
             // Try with VTPass first
             try {
@@ -252,13 +258,14 @@ export default class UtilityService implements IUtilityService {
 
             // Fallback to iRecharge
             return this.irechargeService.validateSmartCardNumber(provider, smartCardNumber);
-        } catch (error) {
-            logger.error('Error validating smartcard number', { error, provider, smartCardNumber });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            logger.error('Error validating smartcard number', { error: errorMessage, provider, smartCardNumber });
             throw error;
         }
     }
 
-    async validateDataBundle(network: string): Promise<any[]> {
+    async validateDataBundle(network: string): Promise<unknown[]> {
         try {
             // Try with VTPass first
             try {
@@ -272,13 +279,14 @@ export default class UtilityService implements IUtilityService {
 
             // Fallback to iRecharge
             return this.irechargeService.validateDataBundle(network);
-        } catch (error) {
-            logger.error('Error validating data bundles', { error, network });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            logger.error('Error validating data bundles', { error: errorMessage, network });
             return [];
         }
     }
 
-    async validateTVPackages(provider: TVType): Promise<any[]> {
+    async validateTVPackages(provider: TVType): Promise<unknown[]> {
         try {
             // Try with VTPass first
             try {
@@ -292,8 +300,9 @@ export default class UtilityService implements IUtilityService {
 
             // Fallback to iRecharge
             return this.irechargeService.validateTVPackages(provider);
-        } catch (error) {
-            logger.error('Error validating TV packages', { error, provider });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            logger.error('Error validating TV packages', { error: errorMessage, provider });
             return [];
         }
     }

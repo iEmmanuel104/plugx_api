@@ -58,4 +58,8 @@ export default class TransactionService {
 
         return transaction;
     }
+
+    static async findTransactionByReference(reference: string): Promise<Transaction | null> {
+        return await Transaction.findOne({ where: { reference } });
+    }
 }

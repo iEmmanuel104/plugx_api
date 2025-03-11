@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// src/services/providers/vtpass.service.ts
 import axios from 'axios';
 import {
     IUtilityProvider,
@@ -18,6 +16,13 @@ import {
 import { logger } from '../../utils/logger';
 import { VTPASS_CONFIG, NODE_ENV } from '../../utils/constants';
 import HelperUtils from '../../utils/helpers';
+import { 
+    MeterVerifyResponse, 
+    SmartCardVerifyResponse, 
+    VTpassVariationCodesResponse, 
+    VTpassPurchaseResponse,
+    Variation,
+} from 'clients/vtPass/types';
 
 export default class VTPassService implements IUtilityProvider {
     private readonly baseUrl: string;
@@ -32,7 +37,7 @@ export default class VTPassService implements IUtilityProvider {
         this.publicKey = VTPASS_CONFIG.PUBLIC_KEY;
     }
 
-    private async makeGetRequest<T>(endpoint: string, params: any = {}): Promise<T> {
+    private async makeGetRequest<T>(endpoint: string, params: Record<string, string | number | boolean | object> = {}): Promise<T> {
         try {
             const response = await axios.get(`${this.baseUrl}/${endpoint}`, {
                 params,
@@ -41,14 +46,14 @@ export default class VTPassService implements IUtilityProvider {
                     'public-key': this.publicKey,
                 },
             });
-            return response.data;
+            return response.data as T;
         } catch (error) {
             logger.error(`VTPass GET request error: ${endpoint}`, error);
             throw error;
         }
     }
 
-    private async makePostRequest<T>(endpoint: string, data: any = {}): Promise<T> {
+    private async makePostRequest<T>(endpoint: string, data: Record<string, string | number | boolean | object> = {}): Promise<T> {
         try {
             const response = await axios.post(`${this.baseUrl}/${endpoint}`, data, {
                 headers: {
@@ -56,13 +61,13 @@ export default class VTPassService implements IUtilityProvider {
                     'secret-key': this.secretKey,
                 },
             });
-            return response.data;
+            return response.data as T;
         } catch (error) {
             logger.error(`VTPass POST request error: ${endpoint}`, error);
             throw error;
         }
     }
-
+    
     private generateRequestId(): string {
         // Format YYYYMMDDHHIISS + 8 random characters
         const now = new Date();
@@ -88,7 +93,7 @@ export default class VTPassService implements IUtilityProvider {
         }
     }
 
-    private mapVTPassResponse(vtpassResponse: any): IProviderResponse {
+    private mapVTPassResponse(vtpassResponse: VTpassPurchaseResponse): IProviderResponse {
         let transactionStatus = TransactionStatus.FAILED;
         let message = 'Transaction failed';
         let success = false;
@@ -117,7 +122,7 @@ export default class VTPassService implements IUtilityProvider {
     // Implementation of IUtilityProvider methods
     async validateTransaction(reference: string): Promise<IProviderResponse> {
         try {
-            const response = await this.makePostRequest('requery', { request_id: reference });
+            const response = await this.makePostRequest<VTpassPurchaseResponse>('requery', { request_id: reference });
             return this.mapVTPassResponse(response);
         } catch (error) {
             logger.error('VTPass validate transaction error', error);
@@ -155,7 +160,7 @@ export default class VTPassService implements IUtilityProvider {
                 phone: request.phone,
             };
 
-            const response = await this.makePostRequest('pay', payload);
+            const response = await this.makePostRequest<VTpassPurchaseResponse>('pay', payload);
             return this.mapVTPassResponse(response);
         } catch (error) {
             logger.error('VTPass airtime purchase error', error);
@@ -195,7 +200,7 @@ export default class VTPassService implements IUtilityProvider {
                 phone: request.phone,
             };
 
-            const response = await this.makePostRequest('pay', payload);
+            const response = await this.makePostRequest<VTpassPurchaseResponse>('pay', payload);
             return this.mapVTPassResponse(response);
         } catch (error) {
             logger.error('VTPass data purchase error', error);
@@ -255,7 +260,7 @@ export default class VTPassService implements IUtilityProvider {
                 payload['email'] = request.email;
             }
 
-            const response = await this.makePostRequest('pay', payload);
+            const response = await this.makePostRequest<VTpassPurchaseResponse>('pay', payload);
             return this.mapVTPassResponse(response);
         } catch (error) {
             logger.error('VTPass electricity purchase error', error);
@@ -284,7 +289,8 @@ export default class VTPassService implements IUtilityProvider {
             }
 
             const requestId = request.reference || this.generateRequestId();
-            const payload: any = {
+            
+            const payload: Record<string, string | number | boolean | object> = {
                 request_id: requestId,
                 serviceID,
                 billersCode: request.smartCardNumber,
@@ -306,10 +312,10 @@ export default class VTPassService implements IUtilityProvider {
 
             // Add optional email if provided
             if (request.email) {
-                payload['email'] = request.email;
+                payload.email = request.email;
             }
 
-            const response = await this.makePostRequest('pay', payload);
+            const response = await this.makePostRequest<VTpassPurchaseResponse>('pay', payload);
             return this.mapVTPassResponse(response);
         } catch (error) {
             logger.error('VTPass TV subscription error', error);
@@ -328,7 +334,7 @@ export default class VTPassService implements IUtilityProvider {
             const serviceID = request.type;
             const requestId = request.reference || this.generateRequestId();
 
-            const payload: any = {
+            const payload: Record<string, string | number | boolean | object> = {
                 request_id: requestId,
                 serviceID,
                 phone: request.phone,
@@ -355,10 +361,10 @@ export default class VTPassService implements IUtilityProvider {
 
             // Add optional email if provided
             if (request.email) {
-                payload['email'] = request.email;
+                payload.email = request.email;
             }
 
-            const response = await this.makePostRequest('pay', payload);
+            const response = await this.makePostRequest<VTpassPurchaseResponse>('pay', payload);
             return this.mapVTPassResponse(response);
         } catch (error) {
             logger.error('VTPass education purchase error', error);
@@ -372,7 +378,11 @@ export default class VTPassService implements IUtilityProvider {
         }
     }
 
-    async validateMeterNumber(disco: string, meterNumber: string, meterType: MeterType): Promise<any> {
+    async validateMeterNumber(disco: string, meterNumber: string, meterType: MeterType): Promise<{
+        success: boolean;
+        message?: string;
+        data: MeterVerifyResponse | Record<string, unknown>;
+    }> {
         try {
             const discoMap: { [key: string]: string } = {
                 'ikeja': 'ikeja-electric',
@@ -400,7 +410,7 @@ export default class VTPassService implements IUtilityProvider {
                 type: meterType.toLowerCase(),
             };
 
-            const response = await this.makePostRequest('merchant-verify', payload);
+            const response = await this.makePostRequest<MeterVerifyResponse>('merchant-verify', payload);
 
             if (response.code === '000') {
                 return {
@@ -420,7 +430,11 @@ export default class VTPassService implements IUtilityProvider {
         }
     }
 
-    async validateSmartCardNumber(provider: TVType, smartCardNumber: string): Promise<any> {
+    async validateSmartCardNumber(provider: TVType, smartCardNumber: string): Promise<{
+        success: boolean;
+        message?: string;
+        data: SmartCardVerifyResponse['content'] | { isValid: boolean } | Record<string, unknown>;
+    }> {
         try {
             const providerMap: { [key: string]: string } = {
                 [TVType.DSTV]: 'dstv',
@@ -448,7 +462,7 @@ export default class VTPassService implements IUtilityProvider {
                 serviceID,
             };
 
-            const response = await this.makePostRequest('merchant-verify', payload);
+            const response = await this.makePostRequest<SmartCardVerifyResponse>('merchant-verify', payload);
 
             if (response.code === '000') {
                 return {
@@ -460,7 +474,7 @@ export default class VTPassService implements IUtilityProvider {
             return {
                 success: false,
                 message: response.response_description || 'Smartcard validation failed',
-                data: response,
+                data: response as unknown as Record<string, unknown>,
             };
         } catch (error) {
             logger.error('VTPass smartcard validation error', error);
@@ -468,7 +482,7 @@ export default class VTPassService implements IUtilityProvider {
         }
     }
 
-    async validateDataBundle(network: string): Promise<any[]> {
+    async validateDataBundle(network: string): Promise<Variation[]> {
         try {
             const networkMap: { [key: string]: string } = {
                 'mtn': 'mtn-data',
@@ -483,7 +497,7 @@ export default class VTPassService implements IUtilityProvider {
                 throw new Error(`Unsupported network: ${network}`);
             }
 
-            const response = await this.makeGetRequest('service-variations', { serviceID });
+            const response = await this.makeGetRequest<VTpassVariationCodesResponse>('service-variations', { serviceID });
 
             if (response.response_description === '000' && response.content && response.content.variations) {
                 return response.content.variations;
@@ -496,7 +510,7 @@ export default class VTPassService implements IUtilityProvider {
         }
     }
 
-    async validateTVPackages(provider: TVType): Promise<any[]> {
+    async validateTVPackages(provider: TVType): Promise<Variation[]> {
         try {
             const providerMap: { [key: string]: string } = {
                 [TVType.DSTV]: 'dstv',
@@ -510,7 +524,7 @@ export default class VTPassService implements IUtilityProvider {
                 throw new Error(`Unsupported TV provider: ${provider}`);
             }
 
-            const response = await this.makeGetRequest('service-variations', { serviceID });
+            const response = await this.makeGetRequest<VTpassVariationCodesResponse>('service-variations', { serviceID });
 
             if (response.response_description === '000' && response.content && response.content.variations) {
                 return response.content.variations;
